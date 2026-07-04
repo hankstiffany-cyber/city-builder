@@ -93,7 +93,15 @@ function frame(now: number): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-  drawTilemap(ctx, game.grid, camera, input.hover, game.overlayOn ? game.landValue : null);
+  const building = game.tool !== "pan";
+  drawTilemap(
+    ctx,
+    game.grid,
+    camera,
+    input.hover,
+    game.overlayOn ? game.landValue : null,
+    building
+  );
   hud.update(game, camera, input.hover);
   minimap.draw();
   while (game.messages.length > 0) toasts.push(game.messages.shift()!);

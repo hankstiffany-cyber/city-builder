@@ -42,7 +42,9 @@ export function drawTilemap(
   camera: Camera,
   hover: { x: number; y: number } | null,
   /** Land-value field in [0,1] to draw as a heat map, or null for no overlay. */
-  overlay: Float32Array | null = null
+  overlay: Float32Array | null = null,
+  /** Show tile grid lines (on while a build tool is active, for aiming). */
+  showGrid = false
 ): void {
   const ts = camera.tileSize;
   const now = performance.now();
@@ -66,7 +68,7 @@ export function drawTilemap(
       const type = tile.type;
       switch (type) {
         case TileType.Grass:
-          drawGrass(ctx, grid, tx, ty, sx, sy, size);
+          drawGrass(ctx, grid, tx, ty, sx, sy, size, true);
           break;
         case TileType.Water:
           drawWater(ctx, grid, tx, ty, sx, sy, size, ts, now);
@@ -84,9 +86,13 @@ export function drawTilemap(
           drawPark(ctx, tx, ty, sx, sy, size, ts);
           break;
         default: {
-          // Zones + power plant: tinted ground, then the building sprite.
+          // Zones + power plant: grass ground, a soft zone-colour wash so the
+          // district still reads at a glance, then the building sprite.
+          drawGrass(ctx, grid, tx, ty, sx, sy, size);
           ctx.fillStyle = ZONE_TINT[type];
+          ctx.globalAlpha = 0.18;
           ctx.fillRect(sx, sy, size, size);
+          ctx.globalAlpha = 1;
           const img = tileSprite(tile, tx, ty);
           if (img) {
             ctx.imageSmoothingEnabled = false; // keep the pixel-art crisp
@@ -118,8 +124,8 @@ export function drawTilemap(
     }
   }
 
-  // Grid lines only when zoomed in enough to be legible.
-  if (ts >= 14) {
+  // Grid lines only while aiming a build tool, and zoomed in enough to matter.
+  if (showGrid && ts >= 14) {
     ctx.strokeStyle = "rgba(0,0,0,0.14)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -143,6 +149,27 @@ export function drawTilemap(
     ctx.lineWidth = 2;
     ctx.strokeRect(sx + 1, sy + 1, ts - 2, ts - 2);
   }
+
+  drawVignette(ctx);
+}
+
+let vignette: CanvasGradient | null = null;
+let vignetteKey = "";
+
+/** Soft edge darkening — cheap depth cue, cached per canvas size. */
+function drawVignette(ctx: CanvasRenderingContext2D): void {
+  const w = ctx.canvas.clientWidth || ctx.canvas.width;
+  const h = ctx.canvas.clientHeight || ctx.canvas.height;
+  const key = `${w}x${h}`;
+  if (key !== vignetteKey) {
+    vignetteKey = key;
+    const r = Math.hypot(w, h) / 2;
+    vignette = ctx.createRadialGradient(w / 2, h / 2, r * 0.55, w / 2, h / 2, r);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,20,0.22)");
+  }
+  ctx.fillStyle = vignette!;
+  ctx.fillRect(0, 0, w, h);
 }
 
 // --- Terrain ---
@@ -159,6 +186,19 @@ const SHORELINE: Record<number, string> = {
   9: "nw",
 };
 
+/** Sparse open-land decoration, keyed by tile hash (~1 in 9 tiles). */
+const DECOR = [
+  "decor_bush_1",
+  "decor_bush_2",
+  "decor_bush_3",
+  "decor_bush_4",
+  "decor_rocks_1",
+  "decor_rocks_2",
+  "decor_flowers_1",
+  "decor_flowers_2",
+  "decor_flowers_3",
+];
+
 function drawGrass(
   ctx: CanvasRenderingContext2D,
   grid: Grid,
@@ -166,7 +206,9 @@ function drawGrass(
   ty: number,
   sx: number,
   sy: number,
-  size: number
+  size: number,
+  /** Scatter bushes/rocks/flowers — off when grass is a base under something. */
+  decor = false
 ): void {
   // A grass tile lapping against water uses the sandy shoreline art.
   const waterMask = neighbourMask(grid, tx, ty, (t) => t === TileType.Water);
@@ -183,10 +225,17 @@ function drawGrass(
   if (img) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(img, sx, sy, size, size);
-    return;
+  } else {
+    ctx.fillStyle = GRASS_SHADES[hash2(tx, ty) % GRASS_SHADES.length];
+    ctx.fillRect(sx, sy, size, size);
   }
-  ctx.fillStyle = GRASS_SHADES[hash2(tx, ty) % GRASS_SHADES.length];
-  ctx.fillRect(sx, sy, size, size);
+  if (decor) {
+    const h = hash2(tx, ty);
+    if (h % 9 === 0) {
+      const d = sprite(DECOR[(h >>> 8) % DECOR.length]);
+      if (d) ctx.drawImage(d, sx, sy, size, size);
+    }
+  }
 }
 
 function drawWater(
@@ -204,6 +253,13 @@ function drawWater(
   if (img) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(img, sx, sy, size, size);
+    // Slow-moving glints so the water reads as alive, not wallpaper.
+    const h = hash2(tx, ty);
+    const glint = 0.5 + 0.5 * Math.sin(now / 1400 + (h % 628) / 100);
+    if (glint > 0.75) {
+      ctx.fillStyle = `rgba(255,255,255,${(glint - 0.75) * 0.25})`;
+      ctx.fillRect(sx, sy, size, size);
+    }
     return;
   }
   // Gentle twinkle: each tile steps through 3 close shades on its own phase.
@@ -235,6 +291,23 @@ function drawTrees(
   size: number,
   ts: number
 ): void {
+  // Forests mix all twelve tree sprites by position hash, with a smaller
+  // second tree on some tiles for depth.
+  const h = hash2(tx, ty);
+  const variant = sprite(`decor_tree_${1 + (h % 12)}`);
+  if (variant) {
+    drawGrass(ctx, grid, tx, ty, sx, sy, size);
+    ctx.imageSmoothingEnabled = false;
+    if ((h & 0x30) === 0x30) {
+      const second = sprite(`decor_tree_${1 + ((h >>> 6) % 12)}`);
+      if (second) {
+        const s = size * 0.62;
+        ctx.drawImage(second, sx + size - s, sy + size * 0.05, s, s);
+      }
+    }
+    ctx.drawImage(variant, sx, sy, size, size);
+    return;
+  }
   const img = sprite("trees");
   if (img) {
     ctx.imageSmoothingEnabled = false;
@@ -243,7 +316,6 @@ function drawTrees(
   }
   drawGrass(ctx, grid, tx, ty, sx, sy, size);
   // 2–3 canopy blobs, arranged by the tile hash so forests look irregular.
-  const h = hash2(tx, ty);
   const blobs = 2 + (h % 2);
   for (let k = 0; k < blobs; k++) {
     const bx = sx + ts * (0.25 + (((h >> (k * 5)) & 15) / 15) * 0.5);
