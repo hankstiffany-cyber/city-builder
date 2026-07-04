@@ -16,6 +16,10 @@ export const CONFIG = {
   // --- Economy ---
   STARTING_MONEY: 20_000,
 
+  // --- Power & connectivity (Phase 3) ---
+  ROAD_ACCESS_RADIUS: 3, // zones need a road within this many tiles (Chebyshev)
+  NO_POWER_BLINK_MS: 600, // full on/off cycle of the no-power indicator
+
   // --- Terrain generation ---
   WATER_LEVEL: 0.32, // noise below this becomes water
   TREE_LOW: 0.62, // noise band [TREE_LOW, TREE_HIGH] becomes trees

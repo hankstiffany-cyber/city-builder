@@ -14,7 +14,7 @@ export class Grid {
     this.height = height;
     this.cells = new Array(width * height);
     for (let i = 0; i < this.cells.length; i++) {
-      this.cells[i] = { type: TileType.Grass, powered: false };
+      this.cells[i] = { type: TileType.Grass, powered: false, roadAccess: false };
     }
   }
 

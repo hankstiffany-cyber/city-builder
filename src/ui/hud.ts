@@ -22,10 +22,13 @@ export class Hud {
     this.moneyEl.textContent = `$${game.money.toLocaleString()}`;
     this.moneyEl.classList.toggle("broke", broke);
 
-    const tileInfo =
-      hover && game.grid.inBounds(hover.x, hover.y)
-        ? `(${hover.x}, ${hover.y}) · ${game.grid.getType(hover.x, hover.y)}`
-        : "— off map —";
+    let tileInfo = "— off map —";
+    if (hover && game.grid.inBounds(hover.x, hover.y)) {
+      const tile = game.grid.get(hover.x, hover.y)!;
+      tileInfo = `(${hover.x}, ${hover.y}) · ${tile.type}`;
+      if (tile.powered) tileInfo += " · ⚡";
+      if (tile.roadAccess) tileInfo += " · 🛣";
+    }
     this.debugEl.textContent = `${game.tool}  |  ${tileInfo}  |  ${Math.round(
       camera.zoom * 100
     )}%`;

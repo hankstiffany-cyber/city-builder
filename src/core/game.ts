@@ -2,6 +2,7 @@ import { CONFIG } from "../config.ts";
 import { Grid } from "../sim/grid.ts";
 import { generateTerrain } from "../sim/terrain.ts";
 import { applyTool, type BuildOutcome, type Tool } from "../sim/build.ts";
+import { recomputeConnectivity } from "../sim/power.ts";
 
 /**
  * Holds all mutable game state and is the single entry point the UI/input
@@ -32,6 +33,7 @@ export class Game {
     const outcome = applyTool(this.grid, this.tool, x, y, this.money);
     if (outcome.ok) {
       this.money -= outcome.cost;
+      recomputeConnectivity(this.grid);
       this.version++;
     }
     return outcome;

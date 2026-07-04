@@ -1,7 +1,8 @@
+import { CONFIG } from "../config.ts";
 import { Grid } from "../sim/grid.ts";
-import { TileType } from "../sim/tiles.ts";
+import { TileType, isZone } from "../sim/tiles.ts";
 import { Camera } from "./camera.ts";
-import { tileSprite } from "./sprites.ts";
+import { sprite, tileSprite } from "./sprites.ts";
 
 /** Flat fill color per tile type (Phase 6 swaps these for real art). */
 const TILE_COLOR: Record<TileType, string> = {
@@ -28,15 +29,19 @@ export function drawTilemap(
 ): void {
   const ts = camera.tileSize;
   const { x0, y0, x1, y1 } = camera.visibleTileRange();
+  // The no-power indicator blinks on a shared clock so all zones flash in sync.
+  const blinkOn =
+    Math.floor(performance.now() / (CONFIG.NO_POWER_BLINK_MS / 2)) % 2 === 0;
 
   for (let ty = y0; ty <= y1; ty++) {
     for (let tx = x0; tx <= x1; tx++) {
-      const type = grid.getType(tx, ty);
+      const tile = grid.get(tx, ty);
+      const type = tile?.type;
       const { x: sx, y: sy } = camera.tileToScreen(tx, ty);
       // +1 covers sub-pixel seams between adjacent fills.
       const size = Math.ceil(ts) + 1;
 
-      if (type === undefined) {
+      if (tile === undefined || type === undefined) {
         ctx.fillStyle = "#10141b"; // out-of-map void
         ctx.fillRect(sx, sy, size, size);
         continue;
@@ -60,6 +65,17 @@ export function drawTilemap(
         drawPowerLine(ctx, sx, sy, ts);
       } else if (type === TileType.PowerPlant) {
         drawPlant(ctx, sx, sy, ts);
+      }
+
+      // Unpowered zones flash the no-power bolt (Phase 3).
+      if (blinkOn && isZone(type) && !tile.powered) {
+        const bolt = sprite("icon_nopower");
+        if (bolt) {
+          ctx.imageSmoothingEnabled = false;
+          // Centered at 60% of the tile so the lot art stays recognisable.
+          const pad = ts * 0.2;
+          ctx.drawImage(bolt, sx + pad, sy + pad, ts - pad * 2, ts - pad * 2);
+        }
       }
     }
   }

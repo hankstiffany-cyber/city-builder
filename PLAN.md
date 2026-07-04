@@ -26,10 +26,11 @@ no terrain elevation, no underground layers, no disasters in v1.
       R/C/I zones, power plant. Click/drag to paint; each placement costs money;
       money counter starts at $20,000. Seeded terrain: grass, water (can't build
       on), trees. → *You can draw a city layout and run out of money.*
-- [ ] **Phase 3 — Power & Connectivity.** Power flood-fills from plants through
-      adjacent conducting tiles. Unpowered zones flash a no-power indicator. Zones
-      need a road within 3 tiles. Scaffolding already in place: `Tile.powered`,
-      `conductsPower()` in `sim/tiles.ts`.
+- [x] **Phase 3 — Power & Connectivity.** Power flood-fills from plants through
+      adjacent conducting tiles (`sim/power.ts`, recomputed after every build).
+      Unpowered zones flash the no-power bolt; HUD shows ⚡/🛣 per tile. Zones get
+      `Tile.roadAccess` when a road is within `ROAD_ACCESS_RADIUS` (3) tiles —
+      Phase 4's growth conditions consume it.
 - [ ] **Phase 4 — The Living City.** Tick loop (pause/slow/fast). Zones grow
       empty→small→medium→dense when powered + road-connected + demand exists.
       RCI demand model. Population + in-game date.

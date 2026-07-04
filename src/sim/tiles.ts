@@ -20,8 +20,10 @@ export enum TileType {
 
 export interface Tile {
   type: TileType;
-  /** Set by the power sim (Phase 3). Present now so the shape is stable. */
+  /** Set by the power flood-fill in `sim/power.ts` after every world change. */
   powered: boolean;
+  /** True for zones with a road within CONFIG.ROAD_ACCESS_RADIUS tiles. */
+  roadAccess: boolean;
 }
 
 /** Terrain tiles are the natural ground; anything else was built by the player. */
