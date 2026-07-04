@@ -37,18 +37,34 @@ export function computeStats(grid: Grid): CityStats {
  *       as commercial capacity catches up.
  *   I — factories follow the workforce plus a fixed export demand, so early
  *       industry is viable before the city can support shops.
+ *
+ * Taxes above the default rate scare growth away (and cheap taxes attract
+ * it, a little): every channel is scaled by the same tax multiplier.
  */
-export function computeDemand(stats: CityStats): Demand {
+export function computeDemand(
+  stats: CityStats,
+  taxRate: number = CONFIG.TAX_RATE_DEFAULT
+): Demand {
   const jobs = stats.shopJobs + stats.factoryJobs;
   const workforce = stats.population * CONFIG.WORKFORCE_RATIO;
+  const tax = clamp01(1 - (taxRate - CONFIG.TAX_RATE_DEFAULT) * CONFIG.TAX_DEMAND_SENSITIVITY);
   return {
-    r: clamp01((jobs + CONFIG.BASE_R_DEMAND - workforce) / CONFIG.DEMAND_SCALE),
-    c: clamp01((stats.population * CONFIG.SHOPS_PER_POP - stats.shopJobs) / CONFIG.DEMAND_SCALE),
-    i: clamp01(
-      (stats.population * CONFIG.FACTORY_PER_POP - stats.factoryJobs + CONFIG.BASE_I_DEMAND) /
-        CONFIG.DEMAND_SCALE
-    ),
+    r: tax * clamp01((jobs + CONFIG.BASE_R_DEMAND - workforce) / CONFIG.DEMAND_SCALE),
+    c:
+      tax *
+      clamp01((stats.population * CONFIG.SHOPS_PER_POP - stats.shopJobs) / CONFIG.DEMAND_SCALE),
+    i:
+      tax *
+      clamp01(
+        (stats.population * CONFIG.FACTORY_PER_POP - stats.factoryJobs + CONFIG.BASE_I_DEMAND) /
+          CONFIG.DEMAND_SCALE
+      ),
   };
+}
+
+/** Monthly treasury income: residents times the tax rate, in whole dollars. */
+export function monthlyTaxIncome(stats: CityStats, taxRate: number): number {
+  return Math.round(stats.population * taxRate * CONFIG.TAX_REVENUE_PER_POP);
 }
 
 function clamp01(v: number): number {

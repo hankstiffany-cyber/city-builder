@@ -80,12 +80,32 @@ body {
   border-radius: 6px;
 }
 
-/* --- Sim speed controls (right side of the HUD) --- */
+/* --- Controls cluster (right side of the HUD) --- */
+.hud-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  pointer-events: auto; /* the HUD itself is click-through */
+}
+
+.hud-tax {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hud-tax input[type="range"] {
+  width: 90px;
+  accent-color: var(--accent);
+}
+
 .hud-speed {
   display: flex;
   gap: 4px;
-  margin-left: auto;
-  pointer-events: auto; /* the HUD itself is click-through */
 }
 
 .speed-btn {
@@ -108,6 +128,13 @@ body {
 @media (max-width: 520px) {
   .hud-debug {
     display: none; /* debug readout is desktop-only; keep phones uncluttered */
+  }
+  #hud {
+    flex-wrap: wrap; /* money/stats on one line, controls wrap below */
+    gap: 8px;
+  }
+  .hud-tax input[type="range"] {
+    width: 70px;
   }
 }
 

@@ -41,6 +41,24 @@ export const CONFIG = {
   BASE_I_DEMAND: 12, // external/export demand keeps early industry viable
   DEMAND_SCALE: 60, // raw demand units that map to 100% on the RCI meter
 
+  // --- Economy (Phase 5) ---
+  TAX_RATE_DEFAULT: 0.07, // 7%
+  TAX_RATE_MAX: 0.2,
+  TAX_REVENUE_PER_POP: 10, // $/resident/month at a 100% tax rate
+  TAX_DEMAND_SENSITIVITY: 6, // how hard rates above/below default swing demand
+
+  // --- Pollution & land value (Phase 5) ---
+  POLLUTION_RADIUS: 4, // tiles a source's plume reaches (linear falloff)
+  POLLUTION_PLANT: 1.0, // emission strength of a power plant
+  POLLUTION_PER_I_LEVEL: [0.15, 0.3, 0.45, 0.65], // industrial emission by level
+  R_POLLUTION_SENSITIVITY: 1.2, // growth-odds penalty per unit of pollution
+  LAND_VALUE_BASE: 0.3,
+  LAND_VALUE_POWERED: 0.1,
+  LAND_VALUE_ROAD: 0.15,
+  LAND_VALUE_WATERFRONT: 0.2, // water within 2 tiles
+  LAND_VALUE_TREES: 0.1, // trees within 1 tile
+  LAND_VALUE_POLLUTION: 0.6, // subtracted per unit of pollution
+
   // --- Terrain generation ---
   WATER_LEVEL: 0.32, // noise below this becomes water
   TREE_LOW: 0.62, // noise band [TREE_LOW, TREE_HIGH] becomes trees

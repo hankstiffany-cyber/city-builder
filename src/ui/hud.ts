@@ -21,6 +21,8 @@ export class Hud {
   private moneyEl: HTMLElement;
   private statsEl: HTMLElement;
   private debugEl: HTMLElement;
+  private taxLabelEl: HTMLElement;
+  private overlayBtn: HTMLButtonElement;
   private speedButtons = new Map<Speed, HTMLButtonElement>();
 
   constructor(container: HTMLElement, game: Game) {
@@ -28,10 +30,25 @@ export class Hud {
       `<div class="hud-money" id="hud-money"></div>` +
       `<div class="hud-stats" id="hud-stats"></div>` +
       `<div class="hud-debug" id="hud-debug"></div>` +
-      `<div class="hud-speed" id="hud-speed"></div>`;
+      `<div class="hud-controls" id="hud-controls">` +
+      `<label class="hud-tax">🏛 <span id="hud-tax-label"></span>` +
+      `<input type="range" id="hud-tax-slider" min="0" max="20" step="1"` +
+      ` aria-label="Tax rate"></label>` +
+      `<button type="button" class="speed-btn" id="hud-overlay" title="Land value overlay"` +
+      ` aria-label="Land value overlay">🗺</button>` +
+      `<span class="hud-speed" id="hud-speed"></span>` +
+      `</div>`;
     this.moneyEl = container.querySelector("#hud-money")!;
     this.statsEl = container.querySelector("#hud-stats")!;
     this.debugEl = container.querySelector("#hud-debug")!;
+    this.taxLabelEl = container.querySelector("#hud-tax-label")!;
+
+    const slider = container.querySelector<HTMLInputElement>("#hud-tax-slider")!;
+    slider.value = String(Math.round(game.taxRate * 100));
+    slider.addEventListener("input", () => game.setTaxRate(Number(slider.value) / 100));
+
+    this.overlayBtn = container.querySelector<HTMLButtonElement>("#hud-overlay")!;
+    this.overlayBtn.addEventListener("click", () => game.toggleOverlay());
 
     const speedEl = container.querySelector("#hud-speed")!;
     for (const def of SPEEDS) {
@@ -53,10 +70,13 @@ export class Hud {
     this.moneyEl.classList.toggle("broke", broke);
 
     const { r, c, i } = game.demand;
+    const income = game.lastIncome > 0 ? ` · +$${game.lastIncome.toLocaleString()}/mo` : "";
     this.statsEl.textContent =
       `👥 ${game.population.toLocaleString()} · ${formatDate(game.totalDays)}` +
-      ` · R${Math.round(r * 100)} C${Math.round(c * 100)} I${Math.round(i * 100)}`;
+      ` · R${Math.round(r * 100)} C${Math.round(c * 100)} I${Math.round(i * 100)}${income}`;
 
+    this.taxLabelEl.textContent = `${Math.round(game.taxRate * 100)}%`;
+    this.overlayBtn.classList.toggle("active", game.overlayOn);
     for (const [speed, btn] of this.speedButtons) {
       btn.classList.toggle("active", game.speed === speed);
     }

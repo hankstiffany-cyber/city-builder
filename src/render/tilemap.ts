@@ -25,7 +25,9 @@ export function drawTilemap(
   ctx: CanvasRenderingContext2D,
   grid: Grid,
   camera: Camera,
-  hover: { x: number; y: number } | null
+  hover: { x: number; y: number } | null,
+  /** Land-value field in [0,1] to draw as a heat map, or null for no overlay. */
+  overlay: Float32Array | null = null
 ): void {
   const ts = camera.tileSize;
   const { x0, y0, x1, y1 } = camera.visibleTileRange();
@@ -76,6 +78,13 @@ export function drawTilemap(
           const pad = ts * 0.2;
           ctx.drawImage(bolt, sx + pad, sy + pad, ts - pad * 2, ts - pad * 2);
         }
+      }
+
+      // Land-value heat map: cold blue (low) → warm red (high).
+      if (overlay) {
+        const v = overlay[ty * grid.width + tx];
+        ctx.fillStyle = `hsla(${Math.round(240 - v * 240)}, 90%, 50%, 0.4)`;
+        ctx.fillRect(sx, sy, size, size);
       }
     }
   }

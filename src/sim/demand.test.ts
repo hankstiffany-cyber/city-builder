@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CONFIG } from "../config.ts";
 import { Grid } from "./grid.ts";
 import { TileType } from "./tiles.ts";
-import { computeDemand, computeStats } from "./demand.ts";
+import { computeDemand, computeStats, monthlyTaxIncome } from "./demand.ts";
 
 function setZone(grid: Grid, x: number, y: number, type: TileType, level: number): void {
   grid.setType(x, y, type);
@@ -66,6 +66,16 @@ describe("computeDemand", () => {
     expect(d.c).toBe(0);
   });
 
+  it("high taxes suppress demand; the default rate changes nothing", () => {
+    const stats = { population: 100, shopJobs: 60, factoryJobs: 60 };
+    const base = computeDemand(stats);
+    const atDefault = computeDemand(stats, CONFIG.TAX_RATE_DEFAULT);
+    const taxed = computeDemand(stats, CONFIG.TAX_RATE_MAX);
+    expect(atDefault).toEqual(base);
+    expect(taxed.r).toBeLessThan(base.r);
+    expect(taxed.r).toBeGreaterThanOrEqual(0);
+  });
+
   it("always stays within [0, 1]", () => {
     for (const stats of [
       { population: 0, shopJobs: 0, factoryJobs: 0 },
@@ -78,5 +88,16 @@ describe("computeDemand", () => {
         expect(v).toBeLessThanOrEqual(1);
       }
     }
+  });
+});
+
+describe("monthlyTaxIncome", () => {
+  it("scales with population and rate", () => {
+    const stats = { population: 200, shopJobs: 0, factoryJobs: 0 };
+    expect(monthlyTaxIncome(stats, 0.07)).toBe(
+      Math.round(200 * 0.07 * CONFIG.TAX_REVENUE_PER_POP)
+    );
+    expect(monthlyTaxIncome(stats, 0)).toBe(0);
+    expect(monthlyTaxIncome({ ...stats, population: 0 }, 0.2)).toBe(0);
   });
 });

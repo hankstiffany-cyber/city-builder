@@ -90,6 +90,24 @@ describe("growthTick", () => {
     expect(grid.get(1, 1)!.level).toBe(0);
   });
 
+  it("heavy pollution stalls residential but not industrial growth", () => {
+    const grid = new Grid(5, 5);
+    connectedZone(grid, 1, 1, TileType.ZoneR);
+    connectedZone(grid, 3, 3, TileType.ZoneI);
+    const pollution = new Float32Array(grid.width * grid.height).fill(1); // worst case
+    growthTick(grid, FULL, always, pollution);
+    expect(grid.get(1, 1)!.level).toBe(0); // demand multiplied down to 0
+    expect(grid.get(3, 3)!.level).toBe(1); // industry doesn't care
+  });
+
+  it("clean air leaves residential growth untouched", () => {
+    const grid = new Grid(5, 5);
+    connectedZone(grid, 1, 1, TileType.ZoneR);
+    const pollution = new Float32Array(grid.width * grid.height); // all zeros
+    growthTick(grid, FULL, always, pollution);
+    expect(grid.get(1, 1)!.level).toBe(1);
+  });
+
   it("ignores non-zone tiles entirely", () => {
     const grid = new Grid(5, 5);
     grid.setType(0, 0, TileType.Road);

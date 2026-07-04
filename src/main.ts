@@ -61,7 +61,7 @@ function frame(now: number): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-  drawTilemap(ctx, game.grid, camera, input.hover);
+  drawTilemap(ctx, game.grid, camera, input.hover, game.overlayOn ? game.landValue : null);
   hud.update(game, camera, input.hover);
 
   requestAnimationFrame(frame);

@@ -38,8 +38,12 @@ no terrain elevation, no underground layers, no disasters in v1.
       (jobs↔population feedback, base settler/export pull). Population + in-game
       date (Jan 1900 epoch) + RCI meter in the HUD. Growth-stage art now renders,
       including the `res_*b` variants via a position hash.
-- [ ] **Phase 5 — Economy & Feedback.** Monthly tax income, tax-rate slider,
-      pollution lowering nearby residential desirability, land-value heat-map overlay.
+- [x] **Phase 5 — Economy & Feedback.** Monthly tax income (`monthlyTaxIncome`,
+      collected on calendar-month rollover, shown as +$/mo in the HUD), tax-rate
+      slider (0–20%; rates above default suppress all demand). Pollution field
+      (`sim/pollution.ts`: industry by level + power plants, linear falloff) cuts
+      residential growth odds. Land-value heat-map overlay (`sim/landvalue.ts`,
+      🗺 button): base + power + roads + waterfront + trees − pollution.
 - [ ] **Phase 6 — Art Pass.** Replace colored squares with real tiles/sprites,
       building variety per growth stage, small animations.
 - [ ] **Phase 7 — Polish & Persistence.** Save/load (localStorage + file
