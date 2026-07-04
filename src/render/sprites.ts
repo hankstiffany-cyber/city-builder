@@ -49,17 +49,21 @@ export function sprite(name: string): HTMLImageElement | undefined {
 
 /**
  * The ready sprite for a tile, or undefined if none / not yet loaded. Zones
- * pick art by growth level; a `b` variant (e.g. res_2b) is used on half the
- * map, chosen by a stable position hash, whenever that variant file exists —
- * drop in com_1b.png and commercial gains variety automatically.
+ * pick art by growth level; `b`/`c` variants (e.g. res_2b, res_2c) are mixed
+ * in by a stable position hash whenever those files exist — drop in
+ * com_3b.png and dense commercial gains variety automatically.
  */
 export function tileSprite(tile: Tile, x: number, y: number): HTMLImageElement | undefined {
   if (tile.type === TileType.PowerPlant) return sprite("power_plant");
   const prefix = zonePrefix(tile);
   if (!prefix) return undefined;
   const base = `${prefix}_${tile.level}`;
-  if (((x * 31 + y * 17) & 1) === 1) {
+  const pick = (x * 374761393 + y * 668265263) % 3;
+  if (pick === 1) {
     const variant = sprite(`${base}b`);
+    if (variant) return variant;
+  } else if (pick === 2) {
+    const variant = sprite(`${base}c`);
     if (variant) return variant;
   }
   return sprite(base);
