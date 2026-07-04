@@ -15,6 +15,10 @@ const MINI_COLOR: Record<TileType, string> = {
   [TileType.ZoneI]: "#e0be55",
   [TileType.PowerPlant]: "#d0604a",
   [TileType.Park]: "#7fd06a",
+  [TileType.FireStation]: "#e07a5f",
+  [TileType.PoliceStation]: "#6a8fd8",
+  [TileType.Fire]: "#ff8c1a",
+  [TileType.Rubble]: "#55504a",
 };
 
 /**

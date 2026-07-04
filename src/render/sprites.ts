@@ -59,6 +59,8 @@ export function sprite(name: string): HTMLImageElement | undefined {
  */
 export function tileSprite(tile: Tile, x: number, y: number): HTMLImageElement | undefined {
   if (tile.type === TileType.PowerPlant) return sprite("power_plant");
+  if (tile.type === TileType.FireStation) return sprite("fire_station");
+  if (tile.type === TileType.PoliceStation) return sprite("police_station");
   const prefix = zonePrefix(tile);
   if (!prefix) return undefined;
   const base = `${prefix}_${tile.level}`;

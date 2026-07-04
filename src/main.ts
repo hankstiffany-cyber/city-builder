@@ -32,6 +32,9 @@ try {
 }
 document.title = `${game.cityName} — City Builder`;
 
+// Console/debug handle (also handy for automated testing).
+(window as unknown as { __game: Game }).__game = game;
+
 function persist(): void {
   try {
     localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(game.toSave()));
@@ -102,7 +105,7 @@ function frame(now: number): void {
     game.grid,
     camera,
     input.hover,
-    game.overlayOn ? game.landValue : null,
+    game.overlayField,
     building,
     darkness
   );

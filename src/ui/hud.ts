@@ -48,7 +48,7 @@ export class Hud {
     slider.addEventListener("input", () => game.setTaxRate(Number(slider.value) / 100));
 
     this.overlayBtn = container.querySelector<HTMLButtonElement>("#hud-overlay")!;
-    this.overlayBtn.addEventListener("click", () => game.toggleOverlay());
+    this.overlayBtn.addEventListener("click", () => game.cycleOverlay());
 
     const speedEl = container.querySelector("#hud-speed")!;
     for (const def of SPEEDS) {
@@ -70,13 +70,23 @@ export class Hud {
     this.moneyEl.classList.toggle("broke", broke);
 
     const { r, c, i } = game.demand;
-    const income = game.lastIncome > 0 ? ` · +$${game.lastIncome.toLocaleString()}/mo` : "";
+    const income =
+      game.lastIncome > 0
+        ? ` · +$${game.lastIncome.toLocaleString()}/mo`
+        : game.lastIncome < 0
+          ? ` · -$${Math.abs(game.lastIncome).toLocaleString()}/mo`
+          : "";
     this.statsEl.textContent =
       `${game.cityName} · 👥 ${game.population.toLocaleString()} · ${formatDate(game.totalDays)}` +
       ` · R${Math.round(r * 100)} C${Math.round(c * 100)} I${Math.round(i * 100)}${income}`;
 
     this.taxLabelEl.textContent = `${Math.round(game.taxRate * 100)}%`;
-    this.overlayBtn.classList.toggle("active", game.overlayOn);
+    this.overlayBtn.classList.toggle("active", game.overlayMode !== "none");
+    this.overlayBtn.textContent = game.overlayMode === "crime" ? "🚨" : "🗺";
+    this.overlayBtn.title =
+      game.overlayMode === "crime" ? "Crime overlay (click to hide)"
+      : game.overlayMode === "value" ? "Land value overlay (click for crime)"
+      : "Overlays: land value / crime";
     for (const [speed, btn] of this.speedButtons) {
       btn.classList.toggle("active", game.speed === speed);
     }

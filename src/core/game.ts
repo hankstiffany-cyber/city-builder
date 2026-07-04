@@ -1,5 +1,6 @@
 import { CONFIG } from "../config.ts";
 import { Grid } from "../sim/grid.ts";
+import { TileType } from "../sim/tiles.ts";
 import { generateTerrain } from "../sim/terrain.ts";
 import { applyTool, type BuildOutcome, type Tool } from "../sim/build.ts";
 import { recomputeConnectivity } from "../sim/power.ts";
@@ -7,11 +8,15 @@ import { computeDemand, computeStats, monthlyTaxIncome, type Demand } from "../s
 import { growthTick } from "../sim/growth.ts";
 import { computePollution } from "../sim/pollution.ts";
 import { computeLandValue } from "../sim/landvalue.ts";
+import { computeCoverage } from "../sim/coverage.ts";
+import { computeCrime } from "../sim/crime.ts";
+import { fireTick } from "../sim/fire.ts";
 import { advise, collectReport, type AdvisorMessage } from "../sim/advisor.ts";
 import { decodeInto, encodeSave, type SaveData } from "./save.ts";
 
 export type Speed = "paused" | "slow" | "fast";
 export type Difficulty = keyof typeof CONFIG.DIFFICULTY_MONEY;
+export type OverlayMode = "none" | "value" | "crime";
 
 /**
  * Holds all mutable game state and is the single entry point the UI/input
@@ -29,16 +34,19 @@ export class Game {
   population = 0;
   demand: Demand = { r: 0, c: 0, i: 0 };
   taxRate: number = CONFIG.TAX_RATE_DEFAULT;
-  /** Last month's tax collection, for the HUD income readout. */
+  /** Last month's net income (taxes − station upkeep), for the HUD readout. */
   lastIncome = 0;
-  /** Land-value heat-map overlay. The field is refreshed while the overlay is on. */
-  overlayOn = false;
-  landValue: Float32Array | null = null;
+  /** Heat-map overlay: land value or crime. Field refreshed while active. */
+  overlayMode: OverlayMode = "none";
+  overlayField: Float32Array | null = null;
   /** Advisor messages waiting for the UI to show as toasts. Drained by main.ts. */
   messages: AdvisorMessage[] = [];
   /** Highest population milestone already celebrated (persisted in saves). */
   popMilestone = 0;
   private pollution: Float32Array;
+  private fireCoverage: Float32Array;
+  private policeCoverage: Float32Array;
+  private crime: Float32Array;
   private lastMonth: number;
   private tickCount = 0;
   private shownOnce = new Set<string>();
@@ -52,6 +60,9 @@ export class Game {
     generateTerrain(this.grid, seed);
     recomputeConnectivity(this.grid);
     this.pollution = computePollution(this.grid);
+    this.fireCoverage = computeCoverage(this.grid, TileType.FireStation);
+    this.policeCoverage = computeCoverage(this.grid, TileType.PoliceStation);
+    this.crime = computeCrime(this.grid, this.policeCoverage);
     this.demand = computeDemand(computeStats(this.grid), this.taxRate);
     this.lastMonth = this.monthIndex();
   }
@@ -84,13 +95,30 @@ export class Game {
     this.taxRate = Math.max(0, Math.min(CONFIG.TAX_RATE_MAX, rate));
   }
 
-  toggleOverlay(): void {
-    this.overlayOn = !this.overlayOn;
-    // Refresh immediately so the overlay is correct even while paused.
-    if (this.overlayOn) {
-      this.pollution = computePollution(this.grid);
-      this.landValue = computeLandValue(this.grid, this.pollution);
+  /** Cycles the heat-map: off → land value → crime → off. */
+  cycleOverlay(): void {
+    this.overlayMode =
+      this.overlayMode === "none" ? "value" : this.overlayMode === "value" ? "crime" : "none";
+    this.refreshFields();
+    this.refreshOverlay();
+  }
+
+  private refreshOverlay(): void {
+    if (this.overlayMode === "value") {
+      this.overlayField = computeLandValue(this.grid, this.pollution, this.crime);
+    } else if (this.overlayMode === "crime") {
+      this.overlayField = this.crime;
+    } else {
+      this.overlayField = null;
     }
+  }
+
+  /** Pollution, service coverage, and crime — everything splatted from tiles. */
+  private refreshFields(): void {
+    this.pollution = computePollution(this.grid);
+    this.fireCoverage = computeCoverage(this.grid, TileType.FireStation);
+    this.policeCoverage = computeCoverage(this.grid, TileType.PoliceStation);
+    this.crime = computeCrime(this.grid, this.policeCoverage);
   }
 
   /**
@@ -102,10 +130,10 @@ export class Game {
     if (outcome.ok) {
       this.money -= outcome.cost;
       recomputeConnectivity(this.grid);
-      if (this.overlayOn) {
+      if (this.overlayMode !== "none") {
         // Keep the heat-map live while painting, even when paused.
-        this.pollution = computePollution(this.grid);
-        this.landValue = computeLandValue(this.grid, this.pollution);
+        this.refreshFields();
+        this.refreshOverlay();
       }
       if (this.tool === "power_plant") {
         this.emit({
@@ -123,23 +151,41 @@ export class Game {
   }
 
   /**
-   * One simulation step: refresh stats + demand from the world as it stands,
-   * then let zones grow/decay against that demand. main.ts calls this on the
-   * real-time cadence set by `speed`.
+   * One simulation step: refresh stats + demand, run fires against fire
+   * coverage, let zones grow/decay against demand (dampened by pollution and
+   * crime), then settle the calendar. main.ts calls this on the real-time
+   * cadence set by `speed`.
    */
   tick(): void {
     const stats = computeStats(this.grid);
     this.population = stats.population;
     this.demand = computeDemand(stats, this.taxRate);
-    this.pollution = computePollution(this.grid);
-    growthTick(this.grid, this.demand, Math.random, this.pollution);
-    if (this.overlayOn) this.landValue = computeLandValue(this.grid, this.pollution);
+    this.refreshFields();
+
+    const fire = fireTick(this.grid, this.fireCoverage);
+    if (fire.changed) {
+      // Fire can sever the power network or destroy a station mid-tick.
+      recomputeConnectivity(this.grid);
+      if (fire.ignited > 0) {
+        this.emit(
+          { id: "fire", kind: "warn", text: "🔥 FIRE! It spreads to anything flammable — roads and water stop it, and fire stations (🚒) fight it." },
+          8
+        );
+      }
+    }
+
+    growthTick(this.grid, this.demand, Math.random, this.pollution, this.crime);
+    this.refreshOverlay();
 
     this.totalDays += CONFIG.DAYS_PER_TICK;
     const month = this.monthIndex();
     if (month !== this.lastMonth) {
       this.lastMonth = month;
-      this.lastIncome = monthlyTaxIncome(stats, this.taxRate);
+      let stations = 0;
+      this.grid.forEach((t) => {
+        if (t.type === TileType.FireStation || t.type === TileType.PoliceStation) stations++;
+      });
+      this.lastIncome = monthlyTaxIncome(stats, this.taxRate) - stations * CONFIG.STATION_UPKEEP;
       this.money += this.lastIncome;
     }
 
@@ -151,11 +197,16 @@ export class Game {
   /** Advisor rules + population milestones, paced by once-flags and cooldowns. */
   private runAdvisor(): void {
     const report = collectReport(this.grid, this.pollution);
+    let maxCrime = 0;
+    for (let i = 0; i < this.crime.length; i++) {
+      if (this.crime[i] > maxCrime) maxCrime = this.crime[i];
+    }
     for (const msg of advise({
       report,
       demand: this.demand,
       money: this.money,
       population: this.population,
+      maxCrime,
     })) {
       this.emit(msg);
     }
@@ -234,11 +285,11 @@ export class Game {
   /** Recomputes everything the sim derives from tile types + levels. */
   private refreshDerived(): void {
     recomputeConnectivity(this.grid);
-    this.pollution = computePollution(this.grid);
+    this.refreshFields();
     const stats = computeStats(this.grid);
     this.population = stats.population;
     this.demand = computeDemand(stats, this.taxRate);
-    if (this.overlayOn) this.landValue = computeLandValue(this.grid, this.pollution);
+    this.refreshOverlay();
     this.version++;
   }
 }

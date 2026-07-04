@@ -78,9 +78,19 @@ no terrain elevation, no underground layers, no disasters in v1.
       sailboats bouncing around the water, bird flocks crossing by day.
       Zoom-aware detail: decor and second trees fade in past ~14px tiles.
 
-Still open: disasters (fire spreads), police/fire coverage, traffic density
-affecting desirability (the ambient cars are visual only), stadium/seaport/
-airport, scenario challenges, sound.
+- [x] **Services & disasters.** Fire + police stations ($500, $15/mo upkeep
+      each, must be powered): `sim/coverage.ts` projects max-combined coverage
+      over STATION_COVERAGE_RADIUS. Crime (`sim/crime.ts`) plumes from developed
+      zones (C worst), minus police coverage; it cuts land value and stalls
+      commercial growth. Fires (`sim/fire.ts`): random ignition scaling with
+      city size, spread to flammable neighbours (roads/water/rubble are
+      firebreaks), burnout to bulldozable rubble — fire coverage prevents,
+      slows, and extinguishes. Overlay button cycles land value → crime.
+      Advisor: fire alerts, no-fire-dept hint, crime-wave warning. Civic
+      sprites from the expansion pack.
+
+Still open: traffic density affecting desirability (the ambient cars are
+visual only), stadium/seaport/airport, scenario challenges, sound, bridges.
 
 ## Deferred / notes for later
 - **Art pass mostly done early.** All building sprites in `src/assets/buildings/`

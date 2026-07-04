@@ -71,6 +71,21 @@ export const CONFIG = {
   TOAST_MS: 6_500, // how long a message stays on screen
   MAX_TOASTS: 3,
 
+  // --- Services & disasters (Phase 8) ---
+  STATION_COVERAGE_RADIUS: 8, // fire/police reach (Chebyshev, linear falloff)
+  STATION_UPKEEP: 15, // $/month per station, deducted on tax day
+  FIRE_RISK_PER_TILE: 0.000005, // ignition odds per flammable built tile per tick
+  FIRE_RISK_CAP: 0.02,
+  FIRE_SPREAD_CHANCE: 0.22, // per burning neighbour per tick, scaled by coverage
+  FIRE_BURNOUT_CHANCE: 0.1, // base chance a fire dies to rubble each tick
+  FIRE_BURNOUT_COVERAGE_BONUS: 0.4, // extra burnout odds at full fire coverage
+  CRIME_R_PER_LEVEL: 0.05, // crime emitted per residential level
+  CRIME_C_PER_LEVEL: 0.09, // shops attract the most trouble
+  CRIME_I_PER_LEVEL: 0.04,
+  CRIME_RADIUS: 3,
+  LAND_VALUE_CRIME: 0.45, // subtracted per unit of crime
+  C_CRIME_SENSITIVITY: 1.0, // commercial growth penalty per unit of crime
+
   // --- Atmosphere & ambient life (Phase 8 polish) ---
   DAY_NIGHT_TICKS: 240, // sim ticks per full day/night cycle (~2.8 min at ▶)
   NIGHT_MAX_DARKNESS: 0.34, // screen dim at deepest night
@@ -101,4 +116,6 @@ export const TOOL_COST: Record<string, number> = {
   zone_i: 100,
   power_plant: 3_000,
   park: 30,
+  fire_station: 500,
+  police_station: 500,
 };

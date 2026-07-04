@@ -7,9 +7,13 @@ import { TileType } from "./tiles.ts";
  * derived — nothing reads it back into the sim yet; it drives the heat-map
  * overlay (and later phases can tap it for desirability).
  *
- *   base + powered + road access + waterfront + trees − pollution
+ *   base + powered + road access + waterfront + trees + parks − pollution − crime
  */
-export function computeLandValue(grid: Grid, pollution: Float32Array): Float32Array {
+export function computeLandValue(
+  grid: Grid,
+  pollution: Float32Array,
+  crime?: Float32Array
+): Float32Array {
   const field = new Float32Array(grid.width * grid.height);
 
   grid.forEach((tile, x, y) => {
@@ -21,6 +25,7 @@ export function computeLandValue(grid: Grid, pollution: Float32Array): Float32Ar
     if (nearType(grid, x, y, 1, TileType.Trees)) v += CONFIG.LAND_VALUE_TREES;
     if (nearType(grid, x, y, CONFIG.PARK_RADIUS, TileType.Park)) v += CONFIG.LAND_VALUE_PARK;
     v -= pollution[y * grid.width + x] * CONFIG.LAND_VALUE_POLLUTION;
+    if (crime) v -= crime[y * grid.width + x] * CONFIG.LAND_VALUE_CRIME;
     field[y * grid.width + x] = Math.max(0, Math.min(1, v));
   });
 

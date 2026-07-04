@@ -19,6 +19,9 @@ export interface CityReport {
   vacant: { r: number; c: number; i: number };
   /** Residential tiles suffering pollution above POLLUTED_R_THRESHOLD. */
   pollutedResidential: number;
+  fireStations: number;
+  policeStations: number;
+  fires: number;
 }
 
 export interface AdvisorMessage {
@@ -38,9 +41,15 @@ export function collectReport(grid: Grid, pollution: Float32Array): CityReport {
     roadlessZones: 0,
     vacant: { r: 0, c: 0, i: 0 },
     pollutedResidential: 0,
+    fireStations: 0,
+    policeStations: 0,
+    fires: 0,
   };
   grid.forEach((tile, x, y) => {
     if (tile.type === TileType.PowerPlant) report.hasPlant = true;
+    else if (tile.type === TileType.FireStation) report.fireStations++;
+    else if (tile.type === TileType.PoliceStation) report.policeStations++;
+    else if (tile.type === TileType.Fire) report.fires++;
     if (!isZone(tile.type)) return;
     report.zoneCount++;
     if (!tile.powered) report.unpoweredZones++;
@@ -65,10 +74,18 @@ export interface AdvisorInput {
   demand: Demand;
   money: number;
   population: number;
+  /** Worst crime cell on the map, 0..1. */
+  maxCrime?: number;
 }
 
 /** Stateless rules: everything that applies right now. Caller paces delivery. */
-export function advise({ report, demand, money, population }: AdvisorInput): AdvisorMessage[] {
+export function advise({
+  report,
+  demand,
+  money,
+  population,
+  maxCrime = 0,
+}: AdvisorInput): AdvisorMessage[] {
   const out: AdvisorMessage[] = [];
 
   // Tutorial arc for a brand-new city.
@@ -116,6 +133,22 @@ export function advise({ report, demand, money, population }: AdvisorInput): Adv
       id: "pollution",
       kind: "warn",
       text: "🏭 Homes choking on pollution won't grow. Keep industry and power plants away — parks (🌳) help nearby land too.",
+    });
+  }
+
+  // Services.
+  if (population >= 300 && report.fireStations === 0) {
+    out.push({
+      id: "need_fire_dept",
+      kind: "hint",
+      text: "🚒 The city has no fire department. One station covers a wide area — and fires WILL happen.",
+    });
+  }
+  if (maxCrime > 0.5 && report.policeStations * 2 <= Math.floor(population / 400)) {
+    out.push({
+      id: "crime_wave",
+      kind: "warn",
+      text: "🚨 Crime is taking hold — shops won't grow in rough blocks. Build Police Stations (check the 🗺 crime overlay).",
     });
   }
 

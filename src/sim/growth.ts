@@ -25,7 +25,8 @@ export function growthTick(
   grid: Grid,
   demand: Demand,
   rand: () => number = Math.random,
-  pollution?: Float32Array
+  pollution?: Float32Array,
+  crime?: Float32Array
 ): GrowthResult {
   let grew = 0;
   let decayed = 0;
@@ -43,6 +44,11 @@ export function growthTick(
       }
       // A nearby park makes the neighbourhood fill in faster.
       if (d > 0 && hasParkNear(grid, x, y)) d *= 1 + CONFIG.PARK_GROWTH_BONUS;
+    }
+
+    // Shops won't move into high-crime blocks; police coverage fixes that.
+    if (tile.type === TileType.ZoneC && crime) {
+      d *= Math.max(0, 1 - crime[y * grid.width + x] * CONFIG.C_CRIME_SENSITIVITY);
     }
 
     if (tile.powered && tile.roadAccess) {

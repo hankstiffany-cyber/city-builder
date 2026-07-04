@@ -18,6 +18,8 @@ const TOOLS: ToolDef[] = [
   { tool: "zone_i", label: "Industrial", icon: "🏭" },
   { tool: "power_plant", label: "Power plant", icon: "🔌" },
   { tool: "park", label: "Park", icon: "🌳" },
+  { tool: "fire_station", label: "Fire dept", icon: "🚒" },
+  { tool: "police_station", label: "Police", icon: "🚓" },
 ];
 
 /**

@@ -12,7 +12,9 @@ export type Tool =
   | "zone_c"
   | "zone_i"
   | "power_plant"
-  | "park";
+  | "park"
+  | "fire_station"
+  | "police_station";
 
 /** The tile type a build tool paints. `pan`/`bulldoze` return null. */
 export function toolTileType(tool: Tool): TileType | null {
@@ -31,6 +33,10 @@ export function toolTileType(tool: Tool): TileType | null {
       return TileType.PowerPlant;
     case "park":
       return TileType.Park;
+    case "fire_station":
+      return TileType.FireStation;
+    case "police_station":
+      return TileType.PoliceStation;
     case "pan":
     case "bulldoze":
       return null;
@@ -62,6 +68,7 @@ export function applyTool(
   if (tool === "bulldoze") {
     // Water can't be terraformed; already-bare grass is nothing to do.
     if (current === TileType.Water) return { ok: false, reason: "water" };
+    if (current === TileType.Fire) return { ok: false, reason: "nothing_to_do" };
     if (current === TileType.Grass) return { ok: false, reason: "nothing_to_do" };
     if (money < cost) return { ok: false, reason: "no_money" };
     grid.setType(x, y, TileType.Grass);

@@ -21,6 +21,8 @@ const ZONE_TINT: Record<string, string> = {
   [TileType.ZoneC]: "#3f7fc0",
   [TileType.ZoneI]: "#c9a94e",
   [TileType.PowerPlant]: "#9a4f3f",
+  [TileType.FireStation]: "#b0524a",
+  [TileType.PoliceStation]: "#4a68b0",
 };
 
 const GRASS_SHADES = ["#5a8f4a", "#568b46", "#5f9350", "#548845"];
@@ -86,6 +88,12 @@ export function drawTilemap(
           break;
         case TileType.Park:
           drawPark(ctx, tx, ty, sx, sy, size, ts);
+          break;
+        case TileType.Fire:
+          drawFire(ctx, tx, ty, sx, sy, size, ts, now);
+          break;
+        case TileType.Rubble:
+          drawRubble(ctx, tx, ty, sx, sy, size, ts);
           break;
         default: {
           // Zones + power plant: grass ground, a soft zone-colour wash so the
@@ -423,6 +431,70 @@ function drawPark(
     const fy = sy + ts * (0.6 + (((h >> (k * 4 + 2)) & 7) / 7) * 0.3);
     ctx.fillStyle = flowers[(h >> k) % 3];
     ctx.fillRect(fx, fy, Math.max(1.5, ts * 0.07), Math.max(1.5, ts * 0.07));
+  }
+}
+
+/** Burning tile: scorched ground and flickering, layered flames. */
+function drawFire(
+  ctx: CanvasRenderingContext2D,
+  tx: number,
+  ty: number,
+  sx: number,
+  sy: number,
+  size: number,
+  ts: number,
+  now: number
+): void {
+  ctx.fillStyle = "#2a1a12"; // scorched base
+  ctx.fillRect(sx, sy, size, size);
+  const h = hash2(tx, ty);
+  for (let k = 0; k < 4; k++) {
+    const flick = Math.sin(now / 90 + k * 2.1 + (h % 7)) * 0.5 + 0.5;
+    const fx = sx + ts * (0.2 + (((h >>> (k * 4)) & 15) / 15) * 0.6);
+    const base = sy + ts * 0.9;
+    const hgt = ts * (0.35 + flick * 0.4);
+    const wid = ts * (0.12 + flick * 0.08);
+    ctx.fillStyle = k % 2 ? "#ff9d2e" : "#ff5a1f";
+    ctx.beginPath();
+    ctx.moveTo(fx - wid, base);
+    ctx.lineTo(fx, base - hgt);
+    ctx.lineTo(fx + wid, base);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Hot core.
+  ctx.fillStyle = "rgba(255, 224, 130, 0.85)";
+  const coreFlick = Math.sin(now / 70 + (h % 11)) * 0.5 + 0.5;
+  ctx.beginPath();
+  ctx.arc(sx + ts * 0.5, sy + ts * 0.78, ts * (0.1 + coreFlick * 0.06), 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/** Burned-out lot: ash, charred debris, ready for the bulldozer. */
+function drawRubble(
+  ctx: CanvasRenderingContext2D,
+  tx: number,
+  ty: number,
+  sx: number,
+  sy: number,
+  size: number,
+  ts: number
+): void {
+  const img = sprite("rubble");
+  if (img) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sx, sy, size, size);
+    return;
+  }
+  ctx.fillStyle = "#4d4842";
+  ctx.fillRect(sx, sy, size, size);
+  const h = hash2(tx, ty);
+  for (let k = 0; k < 5; k++) {
+    const rx = sx + ts * (0.1 + (((h >>> (k * 5)) & 15) / 15) * 0.75);
+    const ry = sy + ts * (0.1 + (((h >>> (k * 5 + 2)) & 15) / 15) * 0.75);
+    const s = Math.max(1.5, ts * (0.07 + ((h >>> k) & 3) * 0.03));
+    ctx.fillStyle = k % 2 ? "#37332e" : "#5f5952";
+    ctx.fillRect(rx, ry, s, s * 0.7);
   }
 }
 

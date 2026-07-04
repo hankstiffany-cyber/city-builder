@@ -14,6 +14,9 @@ function input(overrides: Partial<AdvisorInput> = {}): AdvisorInput {
       roadlessZones: 0,
       vacant: { r: 0, c: 0, i: 0 },
       pollutedResidential: 0,
+      fireStations: 0,
+      policeStations: 0,
+      fires: 0,
     },
     demand: { r: 0, c: 0, i: 0 },
     money: 10_000,
@@ -99,6 +102,9 @@ describe("advise", () => {
       roadlessZones: 0,
       vacant: { r: 3, c: 3, i: 3 },
       pollutedResidential: 0,
+      fireStations: 1,
+      policeStations: 1,
+      fires: 0,
     };
     const msgs = advise(input({ report, demand: { r: 0.4, c: 0.3, i: 0.4 }, population: 500 }));
     expect(msgs).toEqual([]);

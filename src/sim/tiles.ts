@@ -17,6 +17,11 @@ export enum TileType {
   ZoneI = "zone_i",
   PowerPlant = "power_plant",
   Park = "park",
+  FireStation = "fire_station",
+  PoliceStation = "police_station",
+  // --- Transient states ---
+  Fire = "fire",
+  Rubble = "rubble",
 }
 
 export interface Tile {
@@ -43,9 +48,9 @@ export function isTerrain(type: TileType): boolean {
   return TERRAIN.has(type);
 }
 
-/** Water cannot be built on or bulldozed in v1 (no terraforming). */
+/** Water can't be built on (no terraforming); fires must burn out first. */
 export function isBuildable(type: TileType): boolean {
-  return type !== TileType.Water;
+  return type !== TileType.Water && type !== TileType.Fire;
 }
 
 const ZONES = new Set<TileType>([TileType.ZoneR, TileType.ZoneC, TileType.ZoneI]);
@@ -60,6 +65,25 @@ export function conductsPower(type: TileType): boolean {
     type === TileType.PowerLine ||
     type === TileType.Road ||
     type === TileType.PowerPlant ||
+    type === TileType.FireStation ||
+    type === TileType.PoliceStation ||
     isZone(type)
   );
+}
+
+const FLAMMABLE = new Set<TileType>([
+  TileType.Trees,
+  TileType.Park,
+  TileType.ZoneR,
+  TileType.ZoneC,
+  TileType.ZoneI,
+  TileType.PowerLine,
+  TileType.PowerPlant,
+  TileType.FireStation,
+  TileType.PoliceStation,
+]);
+
+/** What a fire can ignite. Grass, roads, water, and rubble are firebreaks. */
+export function isFlammable(type: TileType): boolean {
+  return FLAMMABLE.has(type);
 }
