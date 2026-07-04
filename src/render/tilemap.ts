@@ -44,7 +44,9 @@ export function drawTilemap(
   /** Land-value field in [0,1] to draw as a heat map, or null for no overlay. */
   overlay: Float32Array | null = null,
   /** Show tile grid lines (on while a build tool is active, for aiming). */
-  showGrid = false
+  showGrid = false,
+  /** Day/night dim level from Game.darkness — lights windows at night. */
+  darkness = 0
 ): void {
   const ts = camera.tileSize;
   const now = performance.now();
@@ -100,6 +102,14 @@ export function drawTilemap(
           }
           if (type === TileType.PowerPlant) {
             drawSmoke(ctx, tx, ty, sx, sy, ts, now);
+            if (darkness > 0.12 && blinkOn) {
+              ctx.fillStyle = "rgba(255,80,70,0.9)"; // stack beacon
+              ctx.fillRect(sx + ts * 0.46, sy + ts * 0.08, Math.max(1.5, ts * 0.06), Math.max(1.5, ts * 0.06));
+            }
+          }
+          // Warm windows glowing in developed, powered buildings after dusk.
+          if (darkness > 0.12 && isZone(type) && tile.level > 0 && tile.powered) {
+            drawWindows(ctx, tx, ty, sx, sy, ts, darkness);
           }
         }
       }
@@ -149,8 +159,42 @@ export function drawTilemap(
     ctx.lineWidth = 2;
     ctx.strokeRect(sx + 1, sy + 1, ts - 2, ts - 2);
   }
+}
 
+/**
+ * Night tint + vignette, drawn by main.ts AFTER the ambient layer so cars,
+ * boats and birds sit under the darkness like everything else.
+ */
+export function drawAtmosphere(ctx: CanvasRenderingContext2D, darkness: number): void {
+  const w = ctx.canvas.clientWidth || ctx.canvas.width;
+  const h = ctx.canvas.clientHeight || ctx.canvas.height;
+  if (darkness > 0.01) {
+    ctx.fillStyle = `rgba(9, 13, 38, ${darkness})`;
+    ctx.fillRect(0, 0, w, h);
+  }
   drawVignette(ctx);
+}
+
+/** 2–4 lit windows per building, deterministic per tile so they don't dance. */
+function drawWindows(
+  ctx: CanvasRenderingContext2D,
+  tx: number,
+  ty: number,
+  sx: number,
+  sy: number,
+  ts: number,
+  darkness: number
+): void {
+  const h = hash2(tx, ty);
+  const alpha = Math.min(1, darkness / CONFIG.NIGHT_MAX_DARKNESS) * 0.8;
+  ctx.fillStyle = `rgba(255, 213, 128, ${alpha})`;
+  const n = 2 + (h % 3);
+  const s = Math.max(1.5, ts * 0.07);
+  for (let k = 0; k < n; k++) {
+    const wx = sx + ts * (0.25 + (((h >>> (k * 5)) & 15) / 15) * 0.5);
+    const wy = sy + ts * (0.3 + (((h >>> (k * 5 + 2)) & 15) / 15) * 0.4);
+    ctx.fillRect(wx, wy, s, s);
+  }
 }
 
 let vignette: CanvasGradient | null = null;
@@ -229,11 +273,16 @@ function drawGrass(
     ctx.fillStyle = GRASS_SHADES[hash2(tx, ty) % GRASS_SHADES.length];
     ctx.fillRect(sx, sy, size, size);
   }
-  if (decor) {
+  if (decor && size >= 14) {
     const h = hash2(tx, ty);
     if (h % 9 === 0) {
       const d = sprite(DECOR[(h >>> 8) % DECOR.length]);
-      if (d) ctx.drawImage(d, sx, sy, size, size);
+      if (d) {
+        // Fade small clutter in as the camera zooms, instead of popping.
+        ctx.globalAlpha = Math.min(1, (size - 14) / 10);
+        ctx.drawImage(d, sx, sy, size, size);
+        ctx.globalAlpha = 1;
+      }
     }
   }
 }
@@ -298,11 +347,13 @@ function drawTrees(
   if (variant) {
     drawGrass(ctx, grid, tx, ty, sx, sy, size);
     ctx.imageSmoothingEnabled = false;
-    if ((h & 0x30) === 0x30) {
+    if ((h & 0x30) === 0x30 && size >= 14) {
       const second = sprite(`decor_tree_${1 + ((h >>> 6) % 12)}`);
       if (second) {
         const s = size * 0.62;
+        ctx.globalAlpha = Math.min(1, (size - 14) / 10);
         ctx.drawImage(second, sx + size - s, sy + size * 0.05, s, s);
+        ctx.globalAlpha = 1;
       }
     }
     ctx.drawImage(variant, sx, sy, size, size);

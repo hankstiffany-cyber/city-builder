@@ -70,8 +70,17 @@ no terrain elevation, no underground layers, no disasters in v1.
 - [x] **Minimap.** Bottom-right overview, one pixel per tile, cached until the
       world changes, viewport rectangle, click/drag to jump the camera.
 
+- [x] **Atmosphere & ambient life.** Day/night cycle on the tick clock
+      (DAY_NIGHT_TICKS; pauses with the sim): night tint, lit windows in
+      powered developed zones, plant stack beacon, car headlights. Ambient
+      layer (`render/ambient.ts`): cars commuting on roads (count scales with
+      population, right-hand traffic, mostly-straight junction choices),
+      sailboats bouncing around the water, bird flocks crossing by day.
+      Zoom-aware detail: decor and second trees fade in past ~14px tiles.
+
 Still open: disasters (fire spreads), police/fire coverage, traffic density
-affecting desirability, stadium/seaport/airport, scenario challenges, sound.
+affecting desirability (the ambient cars are visual only), stadium/seaport/
+airport, scenario challenges, sound.
 
 ## Deferred / notes for later
 - **Art pass mostly done early.** All building sprites in `src/assets/buildings/`

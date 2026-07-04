@@ -3,7 +3,8 @@ import { CONFIG } from "./config.ts";
 import { Game } from "./core/game.ts";
 import { Input } from "./core/input.ts";
 import { Camera } from "./render/camera.ts";
-import { drawTilemap } from "./render/tilemap.ts";
+import { drawAtmosphere, drawTilemap } from "./render/tilemap.ts";
+import { Ambient } from "./render/ambient.ts";
 import { createToolbar } from "./ui/toolbar.ts";
 import { createMenu } from "./ui/menu.ts";
 import { Hud } from "./ui/hud.ts";
@@ -49,6 +50,7 @@ const input = new Input(canvas, camera, game);
 const hud = new Hud(hudEl, game);
 const toasts = new Toasts(appEl);
 const minimap = new Minimap(document.getElementById("minimap") as HTMLCanvasElement, game, camera);
+const ambient = new Ambient();
 createToolbar(toolbarEl, game);
 createMenu(toolbarEl, appEl, game);
 
@@ -94,14 +96,19 @@ function frame(now: number): void {
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
   const building = game.tool !== "pan";
+  const darkness = game.darkness;
   drawTilemap(
     ctx,
     game.grid,
     camera,
     input.hover,
     game.overlayOn ? game.landValue : null,
-    building
+    building,
+    darkness
   );
+  ambient.update(elapsed, game, camera);
+  ambient.draw(ctx, camera, darkness, now);
+  drawAtmosphere(ctx, darkness);
   hud.update(game, camera, input.hover);
   minimap.draw();
   while (game.messages.length > 0) toasts.push(game.messages.shift()!);

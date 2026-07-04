@@ -56,6 +56,16 @@ export class Game {
     this.lastMonth = this.monthIndex();
   }
 
+  /**
+   * Day/night dimming in [0, NIGHT_MAX_DARKNESS]. Runs on the tick clock, so
+   * it pauses with the sim and spins faster on fast-forward. Starts at noon.
+   */
+  get darkness(): number {
+    const phase = (this.tickCount % CONFIG.DAY_NIGHT_TICKS) / CONFIG.DAY_NIGHT_TICKS;
+    const daylight = 0.5 + 0.5 * Math.cos(phase * Math.PI * 2);
+    return (1 - daylight) * CONFIG.NIGHT_MAX_DARKNESS;
+  }
+
   /** Calendar month counter (years × 12 + month) for tax-day detection. */
   private monthIndex(): number {
     const d = new Date(1900, 0, 1 + this.totalDays);

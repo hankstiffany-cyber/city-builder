@@ -71,6 +71,13 @@ export const CONFIG = {
   TOAST_MS: 6_500, // how long a message stays on screen
   MAX_TOASTS: 3,
 
+  // --- Atmosphere & ambient life (Phase 8 polish) ---
+  DAY_NIGHT_TICKS: 240, // sim ticks per full day/night cycle (~2.8 min at ▶)
+  NIGHT_MAX_DARKNESS: 0.34, // screen dim at deepest night
+  CAR_SPEED: 1.5, // tiles per second
+  MAX_CARS: 24,
+  TRAFFIC_PER_POP: 0.05, // one car per 20 residents
+
   // --- Persistence & new game (Phase 7) ---
   SAVE_KEY: "city-builder-save-v1", // localStorage slot
   AUTOSAVE_MS: 15_000,
