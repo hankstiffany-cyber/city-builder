@@ -1,6 +1,7 @@
 import { Grid } from "../sim/grid.ts";
 import { TileType } from "../sim/tiles.ts";
 import { Camera } from "./camera.ts";
+import { tileSprite } from "./sprites.ts";
 
 /** Flat fill color per tile type (Phase 6 swaps these for real art). */
 const TILE_COLOR: Record<TileType, string> = {
@@ -44,8 +45,14 @@ export function drawTilemap(
       ctx.fillStyle = TILE_COLOR[type];
       ctx.fillRect(sx, sy, size, size);
 
-      // A couple of cheap flourishes so tile types read at a glance.
-      if (type === TileType.Trees) {
+      // Real building art (level-0 zoned lots + power plant) drawn over the base
+      // fill. Until the PNG decodes, tileSprite() returns undefined and we fall
+      // back to the flat fill / vector flourish below.
+      const img = tileSprite(type);
+      if (img) {
+        ctx.imageSmoothingEnabled = false; // keep the pixel-art crisp
+        ctx.drawImage(img, sx, sy, size, size);
+      } else if (type === TileType.Trees) {
         drawTreeDots(ctx, sx, sy, ts);
       } else if (type === TileType.Road) {
         drawRoadDashes(ctx, grid, tx, ty, sx, sy, ts);

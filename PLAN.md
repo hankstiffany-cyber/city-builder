@@ -45,6 +45,13 @@ Disasters (fire spreads), police/fire coverage, parks, traffic density affecting
 desirability, stadium/seaport/airport, scenario challenges, minimap, sound.
 
 ## Deferred / notes for later
+- **Art pass started early (partial).** Level-0 zoned-lot sprites (`res_0`/`com_0`/
+  `ind_0`) and `power_plant.png` are wired up in `render/sprites.ts` +
+  `render/tilemap.ts`, drawn over the existing flat fills. The growth-stage art
+  (`res_1..3`, `com_1..3`, `ind_1..3`, the `res_*b` variants) and `icon_nopower.png`
+  are bundled in `src/assets/buildings/` but unused until Phase 4 (which sprite a
+  zone shows needs a growth level) and Phase 3 (the no-power overlay). Finish the
+  rest of Phase 6 once those land.
 - Power plant is a single tile for now; SimCity used a 4×4 footprint. Revisit
   when multi-tile buildings arrive (Phase 4/6).
 - No autosave yet — added in Phase 7.
