@@ -66,13 +66,13 @@ export function drawTilemap(
       const type = tile.type;
       switch (type) {
         case TileType.Grass:
-          drawGrass(ctx, tx, ty, sx, sy, size);
+          drawGrass(ctx, grid, tx, ty, sx, sy, size);
           break;
         case TileType.Water:
           drawWater(ctx, grid, tx, ty, sx, sy, size, ts, now);
           break;
         case TileType.Trees:
-          drawTrees(ctx, tx, ty, sx, sy, size, ts);
+          drawTrees(ctx, grid, tx, ty, sx, sy, size, ts);
           break;
         case TileType.Road:
           drawRoad(ctx, grid, tx, ty, sx, sy, size, ts);
@@ -147,14 +147,38 @@ export function drawTilemap(
 
 // --- Terrain ---
 
+/** Water-neighbour mask → shoreline tile suffix (single sides + convex corners). */
+const SHORELINE: Record<number, string> = {
+  1: "n",
+  2: "e",
+  4: "s",
+  8: "w",
+  3: "ne",
+  6: "se",
+  12: "sw",
+  9: "nw",
+};
+
 function drawGrass(
   ctx: CanvasRenderingContext2D,
+  grid: Grid,
   tx: number,
   ty: number,
   sx: number,
   sy: number,
   size: number
 ): void {
+  // A grass tile lapping against water uses the sandy shoreline art.
+  const waterMask = neighbourMask(grid, tx, ty, (t) => t === TileType.Water);
+  if (waterMask !== 0) {
+    const suffix = SHORELINE[waterMask];
+    const shore = suffix ? sprite(`shoreline_${suffix}`) : undefined;
+    if (shore) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(shore, sx, sy, size, size);
+      return;
+    }
+  }
   const img = sprite("grass");
   if (img) {
     ctx.imageSmoothingEnabled = false;
@@ -203,6 +227,7 @@ function drawWater(
 
 function drawTrees(
   ctx: CanvasRenderingContext2D,
+  grid: Grid,
   tx: number,
   ty: number,
   sx: number,
@@ -216,7 +241,7 @@ function drawTrees(
     ctx.drawImage(img, sx, sy, size, size);
     return;
   }
-  drawGrass(ctx, tx, ty, sx, sy, size);
+  drawGrass(ctx, grid, tx, ty, sx, sy, size);
   // 2–3 canopy blobs, arranged by the tile hash so forests look irregular.
   const h = hash2(tx, ty);
   const blobs = 2 + (h % 2);
@@ -364,7 +389,7 @@ function drawPowerLine(
     return;
   }
 
-  drawGrass(ctx, tx, ty, sx, sy, size);
+  drawGrass(ctx, grid, tx, ty, sx, sy, size);
   const cx = sx + ts / 2;
   const wireY = sy + ts * 0.32;
 

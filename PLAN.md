@@ -78,9 +78,12 @@ affecting desirability, stadium/seaport/airport, scenario challenges, sound.
   are wired up: zone art by growth level (with `res_*b` variants), power plant,
   and the flashing `icon_nopower` overlay. Remaining for Phase 6: terrain/road
   tiles are still flat fills + vector flourishes, and no animations yet.
-- `power_plant.png` looks like it has a stray thumbnail strip baked into the
-  image (plant + bolt + faint filename text). Reads fine at game zoom; swap in a
-  clean export if one exists.
+- ~~`power_plant.png` has a stray thumbnail strip baked in~~ — replaced with the
+  cooling-tower render (Jul 2026 art batch).
+- **Unused art stash:** `art/tile-pack/` holds the full programmatic tile pack
+  (bridges, rivers, pipes, highway, cliffs, sand/dirt, substation, water tower,
+  more trees/decor, zone overlays). Not bundled — copy into `src/assets/` when a
+  feature needs them (e.g. bridges when roads-over-water lands).
 - Power plant is a single tile for now; SimCity used a 4×4 footprint. Revisit
   when multi-tile buildings arrive (Phase 4/6).
 - No autosave yet — added in Phase 7.
