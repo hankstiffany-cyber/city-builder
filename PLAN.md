@@ -89,6 +89,11 @@ airport, scenario challenges, sound.
   tiles are still flat fills + vector flourishes, and no animations yet.
 - ~~`power_plant.png` has a stray thumbnail strip baked in~~ — replaced with the
   cooling-tower render (Jul 2026 art batch).
+- **Unused art stash:** `art/expansion-pack/` holds the 75-sprite expansion pack.
+  Standouts for future phases: civic buildings (fire/police/hospital/school/city
+  hall) for the services phase, `icon_no_water` for water utilities, selection/
+  error overlay tiles for build-cursor feedback. The generic building variants
+  are flatter than the current art style — mix in only if the style converges.
 - **Unused art stash:** `art/tile-pack/` holds the full programmatic tile pack
   (bridges, rivers, pipes, highway, cliffs, sand/dirt, substation, water tower,
   more trees/decor, zone overlays). Not bundled — copy into `src/assets/` when a
