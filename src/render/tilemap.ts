@@ -53,7 +53,7 @@ export function drawTilemap(
       // Real building art (level-0 zoned lots + power plant) drawn over the base
       // fill. Until the PNG decodes, tileSprite() returns undefined and we fall
       // back to the flat fill / vector flourish below.
-      const img = tileSprite(type);
+      const img = tileSprite(tile, tx, ty);
       if (img) {
         ctx.imageSmoothingEnabled = false; // keep the pixel-art crisp
         ctx.drawImage(img, sx, sy, size, size);

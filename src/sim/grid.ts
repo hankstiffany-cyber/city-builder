@@ -14,7 +14,7 @@ export class Grid {
     this.height = height;
     this.cells = new Array(width * height);
     for (let i = 0; i < this.cells.length; i++) {
-      this.cells[i] = { type: TileType.Grass, powered: false, roadAccess: false };
+      this.cells[i] = { type: TileType.Grass, powered: false, roadAccess: false, level: 0 };
     }
   }
 
@@ -36,10 +36,15 @@ export class Grid {
     return this.get(x, y)?.type;
   }
 
-  /** Sets a tile's type in place. No-op (returns false) if out of bounds. */
+  /**
+   * Sets a tile's type in place, resetting its development level — a rezoned
+   * or bulldozed lot always starts from scratch. No-op if out of bounds.
+   */
   setType(x: number, y: number, type: TileType): boolean {
     if (!this.inBounds(x, y)) return false;
-    this.cells[this.index(x, y)].type = type;
+    const cell = this.cells[this.index(x, y)];
+    cell.type = type;
+    cell.level = 0;
     return true;
   }
 

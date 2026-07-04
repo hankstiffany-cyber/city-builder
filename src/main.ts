@@ -17,7 +17,7 @@ const camera = new Camera(window.innerWidth, window.innerHeight);
 camera.centerOn(CONFIG.MAP_WIDTH / 2, CONFIG.MAP_HEIGHT / 2);
 
 const input = new Input(canvas, camera, game);
-const hud = new Hud(hudEl);
+const hud = new Hud(hudEl, game);
 createToolbar(toolbarEl, game);
 
 let dpr = 1;
@@ -35,7 +35,28 @@ function resize(): void {
 window.addEventListener("resize", resize);
 resize();
 
-function frame(): void {
+let lastTime = performance.now();
+let tickAccumulator = 0;
+
+function frame(now: number): void {
+  // Fixed-timestep sim ticks driven by wall-clock time, decoupled from fps.
+  const elapsed = now - lastTime;
+  lastTime = now;
+  if (game.speed === "paused") {
+    tickAccumulator = 0;
+  } else {
+    tickAccumulator += elapsed;
+    const tickMs = CONFIG.TICK_MS[game.speed];
+    let ran = 0;
+    while (tickAccumulator >= tickMs && ran < CONFIG.MAX_TICKS_PER_FRAME) {
+      game.tick();
+      tickAccumulator -= tickMs;
+      ran++;
+    }
+    // After a long stall (backgrounded tab), drop the backlog instead of fast-forwarding.
+    if (ran === CONFIG.MAX_TICKS_PER_FRAME) tickAccumulator = 0;
+  }
+
   // Draw in CSS pixels; the transform scales to the device-pixel backing store.
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);

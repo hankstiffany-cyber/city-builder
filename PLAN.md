@@ -31,9 +31,13 @@ no terrain elevation, no underground layers, no disasters in v1.
       Unpowered zones flash the no-power bolt; HUD shows ⚡/🛣 per tile. Zones get
       `Tile.roadAccess` when a road is within `ROAD_ACCESS_RADIUS` (3) tiles —
       Phase 4's growth conditions consume it.
-- [ ] **Phase 4 — The Living City.** Tick loop (pause/slow/fast). Zones grow
-      empty→small→medium→dense when powered + road-connected + demand exists.
-      RCI demand model. Population + in-game date.
+- [x] **Phase 4 — The Living City.** Tick loop (pause/slow/fast, HUD buttons,
+      fixed timestep in main.ts). Zones grow empty→small→medium→dense
+      (`Tile.level`, `sim/growth.ts`) when powered + road-connected + demand
+      exists, and decay when disconnected. RCI demand model in `sim/demand.ts`
+      (jobs↔population feedback, base settler/export pull). Population + in-game
+      date (Jan 1900 epoch) + RCI meter in the HUD. Growth-stage art now renders,
+      including the `res_*b` variants via a position hash.
 - [ ] **Phase 5 — Economy & Feedback.** Monthly tax income, tax-rate slider,
       pollution lowering nearby residential desirability, land-value heat-map overlay.
 - [ ] **Phase 6 — Art Pass.** Replace colored squares with real tiles/sprites,
@@ -46,13 +50,13 @@ Disasters (fire spreads), police/fire coverage, parks, traffic density affecting
 desirability, stadium/seaport/airport, scenario challenges, minimap, sound.
 
 ## Deferred / notes for later
-- **Art pass started early (partial).** Level-0 zoned-lot sprites (`res_0`/`com_0`/
-  `ind_0`) and `power_plant.png` are wired up in `render/sprites.ts` +
-  `render/tilemap.ts`, drawn over the existing flat fills. The growth-stage art
-  (`res_1..3`, `com_1..3`, `ind_1..3`, the `res_*b` variants) and `icon_nopower.png`
-  are bundled in `src/assets/buildings/` but unused until Phase 4 (which sprite a
-  zone shows needs a growth level) and Phase 3 (the no-power overlay). Finish the
-  rest of Phase 6 once those land.
+- **Art pass mostly done early.** All building sprites in `src/assets/buildings/`
+  are wired up: zone art by growth level (with `res_*b` variants), power plant,
+  and the flashing `icon_nopower` overlay. Remaining for Phase 6: terrain/road
+  tiles are still flat fills + vector flourishes, and no animations yet.
+- `power_plant.png` looks like it has a stray thumbnail strip baked into the
+  image (plant + bolt + faint filename text). Reads fine at game zoom; swap in a
+  clean export if one exists.
 - Power plant is a single tile for now; SimCity used a 4×4 footprint. Revisit
   when multi-tile buildings arrive (Phase 4/6).
 - No autosave yet — added in Phase 7.

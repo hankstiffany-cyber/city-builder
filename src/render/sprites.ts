@@ -7,12 +7,8 @@
  * so callers fall back to a flat fill for the first frame or two. The render
  * loop runs every frame, so sprites simply appear once decoded — no redraw
  * plumbing required.
- *
- * Only the level-0 (freshly-zoned) art and the power plant are wired up for now.
- * The growth-stage art (res_1..3, the `b` variants) and `icon_nopower` are
- * bundled and ready, but stay unused until Phase 4 (growth) and Phase 3 (power).
  */
-import { TileType } from "../sim/tiles.ts";
+import { TileType, type Tile } from "../sim/tiles.ts";
 
 // Eager URL imports: Vite rewrites each path to a hashed, base-aware asset URL.
 const urls = import.meta.glob("../assets/buildings/*.png", {
@@ -29,15 +25,23 @@ for (const [path, url] of Object.entries(urls)) {
   images.set(name, img);
 }
 
-/** The sprite for a tile type, or null if that type has no art. */
-function spriteNameForType(type: TileType): string | null {
-  switch (type) {
-    case TileType.ZoneR:
-      return "res_0";
+/**
+ * The sprite for a tile, or null if it has no art. Zones pick their art by
+ * growth level; residential levels 1–2 also have a `b` variant, chosen by a
+ * position hash so the mix is stable frame-to-frame but varies across the map.
+ */
+function spriteNameForTile(tile: Tile, x: number, y: number): string | null {
+  switch (tile.type) {
+    case TileType.ZoneR: {
+      const lvl = tile.level;
+      const wantVariant = ((x * 31 + y * 17) & 1) === 1;
+      if (wantVariant && (lvl === 1 || lvl === 2)) return `res_${lvl}b`;
+      return `res_${lvl}`;
+    }
     case TileType.ZoneC:
-      return "com_0";
+      return `com_${tile.level}`;
     case TileType.ZoneI:
-      return "ind_0";
+      return `ind_${tile.level}`;
     case TileType.PowerPlant:
       return "power_plant";
     default:
@@ -51,8 +55,8 @@ export function sprite(name: string): HTMLImageElement | undefined {
   return img && img.complete && img.naturalWidth > 0 ? img : undefined;
 }
 
-/** The ready sprite for a tile type, or undefined if none / not yet loaded. */
-export function tileSprite(type: TileType): HTMLImageElement | undefined {
-  const name = spriteNameForType(type);
+/** The ready sprite for a tile, or undefined if none / not yet loaded. */
+export function tileSprite(tile: Tile, x: number, y: number): HTMLImageElement | undefined {
+  const name = spriteNameForTile(tile, x, y);
   return name ? sprite(name) : undefined;
 }

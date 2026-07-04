@@ -40,4 +40,12 @@ describe("Grid", () => {
     expect(g.getType(1, 0)).toBe(TileType.Grass);
     expect(g.getType(0, 1)).toBe(TileType.Grass);
   });
+
+  it("resets the development level whenever a tile changes type", () => {
+    const g = new Grid(3, 3);
+    g.setType(1, 1, TileType.ZoneR);
+    g.get(1, 1)!.level = 2;
+    g.setType(1, 1, TileType.Grass); // bulldozed
+    expect(g.get(1, 1)!.level).toBe(0);
+  });
 });

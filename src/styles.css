@@ -65,12 +65,50 @@ body {
   color: #ff6b6b;
 }
 
+.hud-stats {
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
 .hud-debug {
   font-size: 12px;
   color: var(--muted);
   background: rgba(0, 0, 0, 0.35);
   padding: 3px 8px;
   border-radius: 6px;
+}
+
+/* --- Sim speed controls (right side of the HUD) --- */
+.hud-speed {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  pointer-events: auto; /* the HUD itself is click-through */
+}
+
+.speed-btn {
+  width: 36px;
+  height: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.speed-btn.active {
+  background: rgba(79, 157, 222, 0.3);
+  border-color: var(--accent);
+}
+
+@media (max-width: 520px) {
+  .hud-debug {
+    display: none; /* debug readout is desktop-only; keep phones uncluttered */
+  }
 }
 
 /* --- Toolbar (bottom) --- */

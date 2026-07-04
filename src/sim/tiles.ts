@@ -24,6 +24,11 @@ export interface Tile {
   powered: boolean;
   /** True for zones with a road within CONFIG.ROAD_ACCESS_RADIUS tiles. */
   roadAccess: boolean;
+  /**
+   * Zone development stage, 0 (empty lot) to CONFIG.MAX_LEVEL (dense).
+   * Driven by `sim/growth.ts`; always 0 for non-zone tiles.
+   */
+  level: number;
 }
 
 /** Terrain tiles are the natural ground; anything else was built by the player. */
