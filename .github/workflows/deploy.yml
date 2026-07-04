@@ -36,6 +36,10 @@ jobs:
       - run: npm ci
       - run: npm run build
       - uses: actions/configure-pages@v5
+        # enablement: true lets this workflow turn Pages on by itself the first
+        # time it runs, so you don't have to flip it in Settings → Pages first.
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
