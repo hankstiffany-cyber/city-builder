@@ -44,9 +44,13 @@ no terrain elevation, no underground layers, no disasters in v1.
       (`sim/pollution.ts`: industry by level + power plants, linear falloff) cuts
       residential growth odds. Land-value heat-map overlay (`sim/landvalue.ts`,
       🗺 button): base + power + roads + waterfront + trees − pollution.
-- [ ] **Phase 6 — Art Pass (remaining).** Building sprites are done (see notes).
-      Still flat fills + vector flourishes: grass/water/trees/roads/power lines.
-      No animations yet.
+- [x] **Phase 6 — Art Pass.** Building sprites + procedural terrain art:
+      grass shade variation, twinkling water with foam shorelines, shaded tree
+      canopies, auto-tiling roads (shoulders + connected centre lines),
+      power-line pylons with wires, drifting smoke over power plants. Every
+      procedural tile checks for a sprite first (grass/water/trees.png,
+      road_<mask>.png, powerline_<mask>.png — mask bits N=1 E=2 S=4 W=8), so
+      hand-drawn art can replace any of it by dropping a PNG into src/assets/.
 - [x] **Phase 7 — Polish & Persistence.** Save/load: versioned JSON codec in
       `core/save.ts` (types+levels only; derived state recomputed on load),
       localStorage autosave every 15s + on tab-hide, file export/import from the

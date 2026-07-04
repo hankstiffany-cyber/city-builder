@@ -11,7 +11,9 @@
 import { TileType, type Tile } from "../sim/tiles.ts";
 
 // Eager URL imports: Vite rewrites each path to a hashed, base-aware asset URL.
-const urls = import.meta.glob("../assets/buildings/*.png", {
+// Every PNG anywhere under assets/ registers by base name, so new art (e.g. a
+// future assets/tiles/road_5.png) is picked up with zero code changes.
+const urls = import.meta.glob("../assets/**/*.png", {
   eager: true,
   query: "?url",
   import: "default",
@@ -25,25 +27,15 @@ for (const [path, url] of Object.entries(urls)) {
   images.set(name, img);
 }
 
-/**
- * The sprite for a tile, or null if it has no art. Zones pick their art by
- * growth level; residential levels 1–2 also have a `b` variant, chosen by a
- * position hash so the mix is stable frame-to-frame but varies across the map.
- */
-function spriteNameForTile(tile: Tile, x: number, y: number): string | null {
+/** Zone art prefix per tile type; null for types with no per-level art. */
+function zonePrefix(tile: Tile): string | null {
   switch (tile.type) {
-    case TileType.ZoneR: {
-      const lvl = tile.level;
-      const wantVariant = ((x * 31 + y * 17) & 1) === 1;
-      if (wantVariant && (lvl === 1 || lvl === 2)) return `res_${lvl}b`;
-      return `res_${lvl}`;
-    }
+    case TileType.ZoneR:
+      return "res";
     case TileType.ZoneC:
-      return `com_${tile.level}`;
+      return "com";
     case TileType.ZoneI:
-      return `ind_${tile.level}`;
-    case TileType.PowerPlant:
-      return "power_plant";
+      return "ind";
     default:
       return null;
   }
@@ -55,8 +47,20 @@ export function sprite(name: string): HTMLImageElement | undefined {
   return img && img.complete && img.naturalWidth > 0 ? img : undefined;
 }
 
-/** The ready sprite for a tile, or undefined if none / not yet loaded. */
+/**
+ * The ready sprite for a tile, or undefined if none / not yet loaded. Zones
+ * pick art by growth level; a `b` variant (e.g. res_2b) is used on half the
+ * map, chosen by a stable position hash, whenever that variant file exists —
+ * drop in com_1b.png and commercial gains variety automatically.
+ */
 export function tileSprite(tile: Tile, x: number, y: number): HTMLImageElement | undefined {
-  const name = spriteNameForTile(tile, x, y);
-  return name ? sprite(name) : undefined;
+  if (tile.type === TileType.PowerPlant) return sprite("power_plant");
+  const prefix = zonePrefix(tile);
+  if (!prefix) return undefined;
+  const base = `${prefix}_${tile.level}`;
+  if (((x * 31 + y * 17) & 1) === 1) {
+    const variant = sprite(`${base}b`);
+    if (variant) return variant;
+  }
+  return sprite(base);
 }
