@@ -7,6 +7,7 @@ import { computeDemand, computeStats, monthlyTaxIncome, type Demand } from "../s
 import { growthTick } from "../sim/growth.ts";
 import { computePollution } from "../sim/pollution.ts";
 import { computeLandValue } from "../sim/landvalue.ts";
+import { advise, collectReport, type AdvisorMessage } from "../sim/advisor.ts";
 import { decodeInto, encodeSave, type SaveData } from "./save.ts";
 
 export type Speed = "paused" | "slow" | "fast";
@@ -33,8 +34,15 @@ export class Game {
   /** Land-value heat-map overlay. The field is refreshed while the overlay is on. */
   overlayOn = false;
   landValue: Float32Array | null = null;
+  /** Advisor messages waiting for the UI to show as toasts. Drained by main.ts. */
+  messages: AdvisorMessage[] = [];
+  /** Highest population milestone already celebrated (persisted in saves). */
+  popMilestone = 0;
   private pollution: Float32Array;
   private lastMonth: number;
+  private tickCount = 0;
+  private shownOnce = new Set<string>();
+  private messageCooldown = new Map<string, number>();
   /** Bumped whenever the world changes, so the renderer can skip idle redraws later. */
   version = 0;
 
@@ -89,7 +97,17 @@ export class Game {
         this.pollution = computePollution(this.grid);
         this.landValue = computeLandValue(this.grid, this.pollution);
       }
+      if (this.tool === "power_plant") {
+        this.emit({
+          id: "first_plant",
+          kind: "success",
+          text: "⚡ The city has power! Anything touching the plant's network is live.",
+          once: true,
+        });
+      }
       this.version++;
+    } else if (outcome.reason === "no_money") {
+      this.emit({ id: "cant_afford", kind: "warn", text: "💸 Not enough money for that." }, 4);
     }
     return outcome;
   }
@@ -114,7 +132,46 @@ export class Game {
       this.lastIncome = monthlyTaxIncome(stats, this.taxRate);
       this.money += this.lastIncome;
     }
+
+    this.tickCount++;
+    this.runAdvisor();
     this.version++;
+  }
+
+  /** Advisor rules + population milestones, paced by once-flags and cooldowns. */
+  private runAdvisor(): void {
+    const report = collectReport(this.grid, this.pollution);
+    for (const msg of advise({
+      report,
+      demand: this.demand,
+      money: this.money,
+      population: this.population,
+    })) {
+      this.emit(msg);
+    }
+
+    const next = CONFIG.MILESTONES.find((m) => m > this.popMilestone);
+    if (next !== undefined && this.population >= next) {
+      this.popMilestone = next;
+      this.emit({
+        id: `milestone_${next}`,
+        kind: "success",
+        text: `🎉 ${this.cityName} has reached ${next.toLocaleString()} residents!`,
+        once: true,
+      });
+    }
+  }
+
+  /** Queues a message unless its once-flag or cooldown says it's too soon. */
+  private emit(msg: AdvisorMessage, cooldown: number = CONFIG.ADVISOR_COOLDOWN_TICKS): void {
+    if (msg.once) {
+      if (this.shownOnce.has(msg.id)) return;
+      this.shownOnce.add(msg.id);
+    } else {
+      if (this.tickCount < (this.messageCooldown.get(msg.id) ?? 0)) return;
+      this.messageCooldown.set(msg.id, this.tickCount + cooldown);
+    }
+    this.messages.push(msg);
   }
 
   /** Snapshot for localStorage autosave or file export. */
@@ -132,8 +189,10 @@ export class Game {
     this.money = data.money;
     this.totalDays = data.totalDays;
     this.taxRate = Math.max(0, Math.min(CONFIG.TAX_RATE_MAX, data.taxRate));
+    this.popMilestone = typeof data.popMilestone === "number" ? data.popMilestone : 0;
     this.lastIncome = 0;
     this.lastMonth = this.monthIndex();
+    this.resetAdvisor();
     this.refreshDerived();
     return true;
   }
@@ -147,9 +206,19 @@ export class Game {
     this.taxRate = CONFIG.TAX_RATE_DEFAULT;
     this.lastIncome = 0;
     this.population = 0;
+    this.popMilestone = 0;
     this.lastMonth = this.monthIndex();
     this.speed = "slow";
+    this.resetAdvisor();
     this.refreshDerived();
+  }
+
+  /** Clears advisor pacing state so a new/loaded city gets fresh guidance. */
+  private resetAdvisor(): void {
+    this.messages.length = 0;
+    this.shownOnce.clear();
+    this.messageCooldown.clear();
+    this.tickCount = 0;
   }
 
   /** Recomputes everything the sim derives from tile types + levels. */

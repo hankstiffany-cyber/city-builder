@@ -59,8 +59,19 @@ no terrain elevation, no underground layers, no disasters in v1.
       line hidden, touch targets were already large.
 
 ## Phase 8+ backlog (v2 — write ideas here INSTEAD of building them)
-Disasters (fire spreads), police/fire coverage, parks, traffic density affecting
-desirability, stadium/seaport/airport, scenario challenges, minimap, sound.
+- [x] **Advisor messages.** `sim/advisor.ts` rules → toast pop-ups (`ui/toasts.ts`):
+      tutorial arc for new cities (plant → zones → power/roads), standing warnings
+      (unpowered/roadless zones, low funds, pollution), zoning nudges when demand
+      is high with no vacancy, population milestone celebrations (persisted in
+      saves), and instant "not enough money" feedback. Once-flags + per-id
+      cooldowns pace delivery; the toast UI also dedupes by id.
+- [x] **Parks.** 🌳 tool ($30): +land value in radius 2, boosts nearby residential
+      growth odds, procedural lawn/tree/flower art (sprite hook: `park.png`).
+- [x] **Minimap.** Bottom-right overview, one pixel per tile, cached until the
+      world changes, viewport rectangle, click/drag to jump the camera.
+
+Still open: disasters (fire spreads), police/fire coverage, traffic density
+affecting desirability, stadium/seaport/airport, scenario challenges, sound.
 
 ## Deferred / notes for later
 - **Art pass mostly done early.** All building sprites in `src/assets/buildings/`

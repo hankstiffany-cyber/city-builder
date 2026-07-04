@@ -25,6 +25,7 @@ const source = (grid: Grid) => ({
   money: 1234,
   totalDays: 365,
   taxRate: 0.09,
+  popMilestone: 250,
   grid,
 });
 
@@ -43,6 +44,13 @@ describe("save codec", () => {
     expect(data.money).toBe(1234);
     expect(data.totalDays).toBe(365);
     expect(data.taxRate).toBe(0.09);
+    expect(data.popMilestone).toBe(250);
+  });
+
+  it("accepts old saves without popMilestone", () => {
+    const data: Record<string, unknown> = { ...encodeSave(source(sampleGrid())) };
+    delete data.popMilestone;
+    expect(isSaveData(data)).toBe(true);
   });
 
   it("survives JSON serialisation (the actual storage format)", () => {

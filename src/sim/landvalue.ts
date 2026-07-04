@@ -19,6 +19,7 @@ export function computeLandValue(grid: Grid, pollution: Float32Array): Float32Ar
       v += CONFIG.LAND_VALUE_ROAD;
     if (nearType(grid, x, y, 2, TileType.Water)) v += CONFIG.LAND_VALUE_WATERFRONT;
     if (nearType(grid, x, y, 1, TileType.Trees)) v += CONFIG.LAND_VALUE_TREES;
+    if (nearType(grid, x, y, CONFIG.PARK_RADIUS, TileType.Park)) v += CONFIG.LAND_VALUE_PARK;
     v -= pollution[y * grid.width + x] * CONFIG.LAND_VALUE_POLLUTION;
     field[y * grid.width + x] = Math.max(0, Math.min(1, v));
   });

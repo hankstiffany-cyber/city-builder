@@ -7,6 +7,8 @@ import { drawTilemap } from "./render/tilemap.ts";
 import { createToolbar } from "./ui/toolbar.ts";
 import { createMenu } from "./ui/menu.ts";
 import { Hud } from "./ui/hud.ts";
+import { Toasts } from "./ui/toasts.ts";
+import { Minimap } from "./render/minimap.ts";
 import { isSaveData } from "./core/save.ts";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -45,6 +47,8 @@ camera.centerOn(CONFIG.MAP_WIDTH / 2, CONFIG.MAP_HEIGHT / 2);
 
 const input = new Input(canvas, camera, game);
 const hud = new Hud(hudEl, game);
+const toasts = new Toasts(appEl);
+const minimap = new Minimap(document.getElementById("minimap") as HTMLCanvasElement, game, camera);
 createToolbar(toolbarEl, game);
 createMenu(toolbarEl, appEl, game);
 
@@ -91,6 +95,8 @@ function frame(now: number): void {
 
   drawTilemap(ctx, game.grid, camera, input.hover, game.overlayOn ? game.landValue : null);
   hud.update(game, camera, input.hover);
+  minimap.draw();
+  while (game.messages.length > 0) toasts.push(game.messages.shift()!);
 
   requestAnimationFrame(frame);
 }

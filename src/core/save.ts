@@ -23,6 +23,7 @@ const TYPE_ORDER: TileType[] = [
   TileType.ZoneC,
   TileType.ZoneI,
   TileType.PowerPlant,
+  TileType.Park,
 ];
 const TYPE_INDEX = new Map<TileType, number>(TYPE_ORDER.map((t, i) => [t, i]));
 
@@ -32,6 +33,8 @@ export interface SaveData {
   money: number;
   totalDays: number;
   taxRate: number;
+  /** Optional (added after v1 shipped); old saves simply re-celebrate. */
+  popMilestone?: number;
   width: number;
   height: number;
   types: number[];
@@ -43,6 +46,7 @@ export interface SaveSource {
   money: number;
   totalDays: number;
   taxRate: number;
+  popMilestone: number;
   grid: Grid;
 }
 
@@ -60,6 +64,7 @@ export function encodeSave(src: SaveSource): SaveData {
     money: src.money,
     totalDays: src.totalDays,
     taxRate: src.taxRate,
+    popMilestone: src.popMilestone,
     width: src.grid.width,
     height: src.grid.height,
     types,

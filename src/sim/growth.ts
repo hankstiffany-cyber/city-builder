@@ -36,9 +36,13 @@ export function growthTick(
     let d =
       tile.type === TileType.ZoneR ? demand.r : tile.type === TileType.ZoneC ? demand.c : demand.i;
 
-    if (tile.type === TileType.ZoneR && pollution) {
-      const p = pollution[y * grid.width + x];
-      d *= Math.max(0, 1 - p * CONFIG.R_POLLUTION_SENSITIVITY);
+    if (tile.type === TileType.ZoneR) {
+      if (pollution) {
+        const p = pollution[y * grid.width + x];
+        d *= Math.max(0, 1 - p * CONFIG.R_POLLUTION_SENSITIVITY);
+      }
+      // A nearby park makes the neighbourhood fill in faster.
+      if (d > 0 && hasParkNear(grid, x, y)) d *= 1 + CONFIG.PARK_GROWTH_BONUS;
     }
 
     if (tile.powered && tile.roadAccess) {
@@ -53,4 +57,14 @@ export function growthTick(
   });
 
   return { grew, decayed };
+}
+
+function hasParkNear(grid: Grid, x: number, y: number): boolean {
+  const r = CONFIG.PARK_RADIUS;
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      if (grid.getType(x + dx, y + dy) === TileType.Park) return true;
+    }
+  }
+  return false;
 }

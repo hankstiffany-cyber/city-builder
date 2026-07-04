@@ -11,7 +11,8 @@ export type Tool =
   | "zone_r"
   | "zone_c"
   | "zone_i"
-  | "power_plant";
+  | "power_plant"
+  | "park";
 
 /** The tile type a build tool paints. `pan`/`bulldoze` return null. */
 export function toolTileType(tool: Tool): TileType | null {
@@ -28,6 +29,8 @@ export function toolTileType(tool: Tool): TileType | null {
       return TileType.ZoneI;
     case "power_plant":
       return TileType.PowerPlant;
+    case "park":
+      return TileType.Park;
     case "pan":
     case "bulldoze":
       return null;

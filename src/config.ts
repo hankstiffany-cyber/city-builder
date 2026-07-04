@@ -59,6 +59,18 @@ export const CONFIG = {
   LAND_VALUE_TREES: 0.1, // trees within 1 tile
   LAND_VALUE_POLLUTION: 0.6, // subtracted per unit of pollution
 
+  // --- Parks (Phase 8) ---
+  PARK_RADIUS: 2, // tiles a park's benefits reach
+  PARK_GROWTH_BONUS: 0.3, // extra residential growth odds near a park
+  LAND_VALUE_PARK: 0.15,
+
+  // --- Advisor messages (Phase 8) ---
+  ADVISOR_COOLDOWN_TICKS: 26, // ~6 months before the same advice repeats
+  POLLUTED_R_THRESHOLD: 0.35, // pollution level that counts as "homes suffering"
+  MILESTONES: [100, 250, 500, 1_000, 2_500, 5_000, 10_000, 25_000],
+  TOAST_MS: 6_500, // how long a message stays on screen
+  MAX_TOASTS: 3,
+
   // --- Persistence & new game (Phase 7) ---
   SAVE_KEY: "city-builder-save-v1", // localStorage slot
   AUTOSAVE_MS: 15_000,
@@ -81,4 +93,5 @@ export const TOOL_COST: Record<string, number> = {
   zone_c: 100,
   zone_i: 100,
   power_plant: 3_000,
+  park: 30,
 };

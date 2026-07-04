@@ -108,6 +108,22 @@ describe("growthTick", () => {
     expect(grid.get(1, 1)!.level).toBe(1);
   });
 
+  it("a nearby park boosts residential growth odds", () => {
+    // rand lands between the base chance and the park-boosted chance.
+    const between = () => CONFIG.GROW_CHANCE * (1 + CONFIG.PARK_GROWTH_BONUS / 2);
+
+    const bare = new Grid(9, 9);
+    connectedZone(bare, 4, 4, TileType.ZoneR);
+    growthTick(bare, FULL, between);
+    expect(bare.get(4, 4)!.level).toBe(0); // misses without the boost
+
+    const withPark = new Grid(9, 9);
+    connectedZone(withPark, 4, 4, TileType.ZoneR);
+    withPark.setType(5, 4, TileType.Park);
+    growthTick(withPark, FULL, between);
+    expect(withPark.get(4, 4)!.level).toBe(1); // park pushes it over
+  });
+
   it("ignores non-zone tiles entirely", () => {
     const grid = new Grid(5, 5);
     grid.setType(0, 0, TileType.Road);

@@ -17,6 +17,7 @@ const TOOLS: ToolDef[] = [
   { tool: "zone_c", label: "Commercial", icon: "🏬" },
   { tool: "zone_i", label: "Industrial", icon: "🏭" },
   { tool: "power_plant", label: "Power plant", icon: "🔌" },
+  { tool: "park", label: "Park", icon: "🌳" },
 ];
 
 /**

@@ -25,6 +25,10 @@ for (const [path, url] of Object.entries(urls)) {
   const img = new Image();
   img.src = url;
   images.set(name, img);
+  // Zero-padded exports (powerline_01.png) also answer to the canonical
+  // unpadded name (powerline_1), so file naming doesn't have to be exact.
+  const unpadded = name.replace(/_0+(\d)/g, "_$1");
+  if (unpadded !== name && !images.has(unpadded)) images.set(unpadded, img);
 }
 
 /** Zone art prefix per tile type; null for types with no per-level art. */

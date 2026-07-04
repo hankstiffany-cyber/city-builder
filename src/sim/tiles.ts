@@ -16,6 +16,7 @@ export enum TileType {
   ZoneC = "zone_c",
   ZoneI = "zone_i",
   PowerPlant = "power_plant",
+  Park = "park",
 }
 
 export interface Tile {

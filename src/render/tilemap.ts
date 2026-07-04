@@ -80,6 +80,9 @@ export function drawTilemap(
         case TileType.PowerLine:
           drawPowerLine(ctx, grid, tx, ty, sx, sy, size, ts);
           break;
+        case TileType.Park:
+          drawPark(ctx, tx, ty, sx, sy, size, ts);
+          break;
         default: {
           // Zones + power plant: tinted ground, then the building sprite.
           ctx.fillStyle = ZONE_TINT[type];
@@ -233,6 +236,45 @@ function drawTrees(
     ctx.beginPath();
     ctx.arc(bx - r * 0.25, by - r * 0.25, r * 0.4, 0, Math.PI * 2);
     ctx.fill();
+  }
+}
+
+function drawPark(
+  ctx: CanvasRenderingContext2D,
+  tx: number,
+  ty: number,
+  sx: number,
+  sy: number,
+  size: number,
+  ts: number
+): void {
+  const img = sprite("park");
+  if (img) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sx, sy, size, size);
+    return;
+  }
+  // Manicured lawn, a tree, and a couple of flowers.
+  ctx.fillStyle = "#67a555";
+  ctx.fillRect(sx, sy, size, size);
+  const h = hash2(tx, ty);
+  const cx = sx + ts * (0.35 + ((h & 7) / 7) * 0.3);
+  const cy = sy + ts * (0.3 + (((h >> 3) & 7) / 7) * 0.2);
+  const r = Math.max(2, ts * 0.18);
+  ctx.fillStyle = "#2c5e33";
+  ctx.beginPath();
+  ctx.arc(cx + ts * 0.02, cy + ts * 0.03, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3f8a4a";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.85, 0, Math.PI * 2);
+  ctx.fill();
+  const flowers = ["#e5c94e", "#d96a6a", "#e08bd0"];
+  for (let k = 0; k < 3; k++) {
+    const fx = sx + ts * (0.15 + (((h >> (k * 4)) & 15) / 15) * 0.7);
+    const fy = sy + ts * (0.6 + (((h >> (k * 4 + 2)) & 7) / 7) * 0.3);
+    ctx.fillStyle = flowers[(h >> k) % 3];
+    ctx.fillRect(fx, fy, Math.max(1.5, ts * 0.07), Math.max(1.5, ts * 0.07));
   }
 }
 
