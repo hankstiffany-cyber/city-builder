@@ -7,8 +7,10 @@ import { computeDemand, computeStats, monthlyTaxIncome, type Demand } from "../s
 import { growthTick } from "../sim/growth.ts";
 import { computePollution } from "../sim/pollution.ts";
 import { computeLandValue } from "../sim/landvalue.ts";
+import { decodeInto, encodeSave, type SaveData } from "./save.ts";
 
 export type Speed = "paused" | "slow" | "fast";
+export type Difficulty = keyof typeof CONFIG.DIFFICULTY_MONEY;
 
 /**
  * Holds all mutable game state and is the single entry point the UI/input
@@ -17,6 +19,7 @@ export type Speed = "paused" | "slow" | "fast";
 export class Game {
   readonly grid: Grid;
   money: number;
+  cityName: string = CONFIG.DEFAULT_CITY_NAME;
   tool: Tool = "pan";
   speed: Speed = "slow";
   /** In-game days since founding (Jan 1, 1900). Advances DAYS_PER_TICK per tick. */
@@ -111,6 +114,52 @@ export class Game {
       this.lastIncome = monthlyTaxIncome(stats, this.taxRate);
       this.money += this.lastIncome;
     }
+    this.version++;
+  }
+
+  /** Snapshot for localStorage autosave or file export. */
+  toSave(): SaveData {
+    return encodeSave(this);
+  }
+
+  /**
+   * Restores a snapshot in place (same Game object, so UI references stay
+   * valid). Returns false without touching anything if the data is invalid.
+   */
+  loadSave(data: SaveData): boolean {
+    if (!decodeInto(this.grid, data)) return false;
+    this.cityName = data.name || CONFIG.DEFAULT_CITY_NAME;
+    this.money = data.money;
+    this.totalDays = data.totalDays;
+    this.taxRate = Math.max(0, Math.min(CONFIG.TAX_RATE_MAX, data.taxRate));
+    this.lastIncome = 0;
+    this.lastMonth = this.monthIndex();
+    this.refreshDerived();
+    return true;
+  }
+
+  /** Wipes the world and starts over on a fresh map with difficulty-based funds. */
+  newGame(difficulty: Difficulty, seed: number = Math.floor(Math.random() * 2 ** 31)): void {
+    generateTerrain(this.grid, seed);
+    this.money = CONFIG.DIFFICULTY_MONEY[difficulty];
+    this.cityName = CONFIG.DEFAULT_CITY_NAME;
+    this.totalDays = 0;
+    this.taxRate = CONFIG.TAX_RATE_DEFAULT;
+    this.lastIncome = 0;
+    this.population = 0;
+    this.lastMonth = this.monthIndex();
+    this.speed = "slow";
+    this.refreshDerived();
+  }
+
+  /** Recomputes everything the sim derives from tile types + levels. */
+  private refreshDerived(): void {
+    recomputeConnectivity(this.grid);
+    this.pollution = computePollution(this.grid);
+    const stats = computeStats(this.grid);
+    this.population = stats.population;
+    this.demand = computeDemand(stats, this.taxRate);
+    if (this.overlayOn) this.landValue = computeLandValue(this.grid, this.pollution);
     this.version++;
   }
 }

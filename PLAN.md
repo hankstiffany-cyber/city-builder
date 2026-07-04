@@ -44,10 +44,15 @@ no terrain elevation, no underground layers, no disasters in v1.
       (`sim/pollution.ts`: industry by level + power plants, linear falloff) cuts
       residential growth odds. Land-value heat-map overlay (`sim/landvalue.ts`,
       🗺 button): base + power + roads + waterfront + trees − pollution.
-- [ ] **Phase 6 — Art Pass.** Replace colored squares with real tiles/sprites,
-      building variety per growth stage, small animations.
-- [ ] **Phase 7 — Polish & Persistence.** Save/load (localStorage + file
-      export/import), new game / difficulty, city naming, mobile UI pass.
+- [ ] **Phase 6 — Art Pass (remaining).** Building sprites are done (see notes).
+      Still flat fills + vector flourishes: grass/water/trees/roads/power lines.
+      No animations yet.
+- [x] **Phase 7 — Polish & Persistence.** Save/load: versioned JSON codec in
+      `core/save.ts` (types+levels only; derived state recomputed on load),
+      localStorage autosave every 15s + on tab-hide, file export/import from the
+      ⚙ City Hall menu. New game with easy/normal/hard starting funds on a fresh
+      random map. City naming (HUD + document.title). Mobile: HUD wraps, debug
+      line hidden, touch targets were already large.
 
 ## Phase 8+ backlog (v2 — write ideas here INSTEAD of building them)
 Disasters (fire spreads), police/fire coverage, parks, traffic density affecting

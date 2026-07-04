@@ -59,6 +59,12 @@ export const CONFIG = {
   LAND_VALUE_TREES: 0.1, // trees within 1 tile
   LAND_VALUE_POLLUTION: 0.6, // subtracted per unit of pollution
 
+  // --- Persistence & new game (Phase 7) ---
+  SAVE_KEY: "city-builder-save-v1", // localStorage slot
+  AUTOSAVE_MS: 15_000,
+  DIFFICULTY_MONEY: { easy: 20_000, normal: 12_000, hard: 6_000 },
+  DEFAULT_CITY_NAME: "New City",
+
   // --- Terrain generation ---
   WATER_LEVEL: 0.32, // noise below this becomes water
   TREE_LOW: 0.62, // noise band [TREE_LOW, TREE_HIGH] becomes trees

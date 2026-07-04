@@ -4,10 +4,14 @@ A classic SimCity-style, top-down city-building game that runs in the browser �
 on desktop and on your phone. Built with TypeScript + HTML5 Canvas (no game
 engine, no backend). Scoped to the original SimCity (1989): simple, tunable, fun.
 
-**Status:** Phase 2 complete — you can pan/zoom a 100×100 map, pick a tool, and
-paint roads, power lines, R/C/I zones and a power plant onto seeded terrain while
-watching your $20,000 drain. (Growth, power and the economy come in Phases 3–5 —
-see [`PLAN.md`](./PLAN.md).)
+**Status:** Phases 0–5 + 7 complete (and most of the art pass). The full loop is
+playable: paint roads, power lines, R/C/I zones and power plants onto seeded
+terrain; power flood-fills the grid (unpowered zones flash ⚡); zones grow from
+empty lots into dense buildings under an RCI demand model; pollution drags down
+residential growth; taxes come in monthly (slider adjustable); a land-value heat
+map (🗺) shows where the good addresses are. Your city autosaves in the browser
+and can be exported/imported as a file, with new-game difficulties from the ⚙
+menu. See [`PLAN.md`](./PLAN.md) for what's left.
 
 ## Play
 
@@ -27,7 +31,14 @@ npm run dev      # open the printed localhost URL
 
 You can't build on water. Building over existing infrastructure requires
 bulldozing it first. The debug line in the top bar shows the hovered tile's
-coordinates, its type, and the current zoom.
+coordinates, type, growth level, and power/road status.
+
+**Making the city grow:** zones need power (from a plant, conducted through
+roads, power lines, and other zones) *and* a road within 3 tiles. Keep homes
+away from industry and power plants — pollution stalls residential growth.
+Watch the R/C/I numbers in the top bar to see what the city wants, use ⏸/▶/⏩
+to control time, and mind the tax slider: higher rates fill the treasury but
+scare growth away.
 
 ## Develop
 

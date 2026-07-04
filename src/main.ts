@@ -5,20 +5,48 @@ import { Input } from "./core/input.ts";
 import { Camera } from "./render/camera.ts";
 import { drawTilemap } from "./render/tilemap.ts";
 import { createToolbar } from "./ui/toolbar.ts";
+import { createMenu } from "./ui/menu.ts";
 import { Hud } from "./ui/hud.ts";
+import { isSaveData } from "./core/save.ts";
 
 const canvas = document.getElementById("game") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
+const appEl = document.getElementById("app")!;
 const hudEl = document.getElementById("hud")!;
 const toolbarEl = document.getElementById("toolbar")!;
 
 const game = new Game();
+
+// Resume the autosaved city, if this browser has one.
+try {
+  const raw = localStorage.getItem(CONFIG.SAVE_KEY);
+  if (raw) {
+    const data: unknown = JSON.parse(raw);
+    if (isSaveData(data)) game.loadSave(data);
+  }
+} catch {
+  // Corrupt or inaccessible storage — just start fresh.
+}
+document.title = `${game.cityName} — City Builder`;
+
+function persist(): void {
+  try {
+    localStorage.setItem(CONFIG.SAVE_KEY, JSON.stringify(game.toSave()));
+  } catch {
+    // Storage full/blocked; skip silently rather than crash the game loop.
+  }
+}
+setInterval(persist, CONFIG.AUTOSAVE_MS);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") persist(); // phone lock / tab switch
+});
 const camera = new Camera(window.innerWidth, window.innerHeight);
 camera.centerOn(CONFIG.MAP_WIDTH / 2, CONFIG.MAP_HEIGHT / 2);
 
 const input = new Input(canvas, camera, game);
 const hud = new Hud(hudEl, game);
 createToolbar(toolbarEl, game);
+createMenu(toolbarEl, appEl, game);
 
 let dpr = 1;
 

@@ -72,7 +72,7 @@ export class Hud {
     const { r, c, i } = game.demand;
     const income = game.lastIncome > 0 ? ` · +$${game.lastIncome.toLocaleString()}/mo` : "";
     this.statsEl.textContent =
-      `👥 ${game.population.toLocaleString()} · ${formatDate(game.totalDays)}` +
+      `${game.cityName} · 👥 ${game.population.toLocaleString()} · ${formatDate(game.totalDays)}` +
       ` · R${Math.round(r * 100)} C${Math.round(c * 100)} I${Math.round(i * 100)}${income}`;
 
     this.taxLabelEl.textContent = `${Math.round(game.taxRate * 100)}%`;

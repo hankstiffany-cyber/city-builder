@@ -201,6 +201,78 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* --- System menu panel --- */
+.menu-panel[hidden] {
+  display: none; /* our display:flex would otherwise override the hidden attr */
+}
+
+.menu-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100vw - 32px));
+  padding: 18px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-panel h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.menu-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.menu-panel input[type="text"],
+.menu-panel select,
+.menu-panel button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.menu-panel input[type="text"] {
+  width: 170px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.menu-panel button {
+  cursor: pointer;
+}
+
+.menu-panel button:hover {
+  border-color: var(--accent);
+}
+
+.menu-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 @media (max-width: 520px) {
   .tool-btn {
     min-width: 58px;
