@@ -1,6 +1,6 @@
 import { CONFIG } from "../config.ts";
 import { Grid } from "./grid.ts";
-import { TileType, conductsPower, isZone } from "./tiles.ts";
+import { TileType, carriesTraffic, conductsPower, isZone } from "./tiles.ts";
 
 /**
  * Phase 3 connectivity sims. Both passes are full recomputes — a 100×100 grid
@@ -56,7 +56,8 @@ export function recomputeRoadAccess(
 function hasRoadNear(grid: Grid, x: number, y: number, radius: number): boolean {
   for (let dy = -radius; dy <= radius; dy++) {
     for (let dx = -radius; dx <= radius; dx++) {
-      if (grid.getType(x + dx, y + dy) === TileType.Road) return true;
+      const t = grid.getType(x + dx, y + dy);
+      if (t !== undefined && carriesTraffic(t)) return true;
     }
   }
   return false;

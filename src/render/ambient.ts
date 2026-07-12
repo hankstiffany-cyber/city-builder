@@ -1,6 +1,6 @@
 import { CONFIG } from "../config.ts";
 import { Game } from "../core/game.ts";
-import { TileType } from "../sim/tiles.ts";
+import { TileType, carriesTraffic } from "../sim/tiles.ts";
 import { Camera } from "./camera.ts";
 
 /**
@@ -136,13 +136,16 @@ export class Ambient {
     this.roadsVersion = game.version;
     this.roads.length = 0;
     game.grid.forEach((tile, x, y) => {
-      if (tile.type === TileType.Road) this.roads.push(x + y * game.grid.width);
+      if (carriesTraffic(tile.type)) this.roads.push(x + y * game.grid.width);
     });
   }
 
   private updateCars(dt: number, game: Game): void {
     if (game.speed === "paused") return;
-    const isRoad = (x: number, y: number) => game.grid.getType(x, y) === TileType.Road;
+    const isRoad = (x: number, y: number) => {
+      const t = game.grid.getType(x, y);
+      return t !== undefined && carriesTraffic(t);
+    };
 
     const target = Math.min(
       CONFIG.MAX_CARS,

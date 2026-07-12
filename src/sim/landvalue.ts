@@ -1,6 +1,7 @@
 import { CONFIG } from "../config.ts";
 import { Grid } from "./grid.ts";
 import { TileType } from "./tiles.ts";
+import { roadsideTraffic } from "./traffic.ts";
 
 /**
  * Land value per tile in [0, 1], row-major like the pollution field. Purely
@@ -12,7 +13,8 @@ import { TileType } from "./tiles.ts";
 export function computeLandValue(
   grid: Grid,
   pollution: Float32Array,
-  crime?: Float32Array
+  crime?: Float32Array,
+  traffic?: Float32Array
 ): Float32Array {
   const field = new Float32Array(grid.width * grid.height);
 
@@ -26,6 +28,7 @@ export function computeLandValue(
     if (nearType(grid, x, y, CONFIG.PARK_RADIUS, TileType.Park)) v += CONFIG.LAND_VALUE_PARK;
     v -= pollution[y * grid.width + x] * CONFIG.LAND_VALUE_POLLUTION;
     if (crime) v -= crime[y * grid.width + x] * CONFIG.LAND_VALUE_CRIME;
+    if (traffic) v -= roadsideTraffic(grid, traffic, x, y) * CONFIG.LAND_VALUE_TRAFFIC;
     field[y * grid.width + x] = Math.max(0, Math.min(1, v));
   });
 

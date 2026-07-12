@@ -82,11 +82,13 @@ export class Hud {
 
     this.taxLabelEl.textContent = `${Math.round(game.taxRate * 100)}%`;
     this.overlayBtn.classList.toggle("active", game.overlayMode !== "none");
-    this.overlayBtn.textContent = game.overlayMode === "crime" ? "🚨" : "🗺";
+    this.overlayBtn.textContent =
+      game.overlayMode === "crime" ? "🚨" : game.overlayMode === "traffic" ? "🚗" : "🗺";
     this.overlayBtn.title =
-      game.overlayMode === "crime" ? "Crime overlay (click to hide)"
-      : game.overlayMode === "value" ? "Land value overlay (click for crime)"
-      : "Overlays: land value / crime";
+      game.overlayMode === "value" ? "Land value overlay (click for crime)"
+      : game.overlayMode === "crime" ? "Crime overlay (click for traffic)"
+      : game.overlayMode === "traffic" ? "Traffic overlay (click to hide)"
+      : "Overlays: land value / crime / traffic";
     for (const [speed, btn] of this.speedButtons) {
       btn.classList.toggle("active", game.speed === speed);
     }

@@ -89,8 +89,19 @@ no terrain elevation, no underground layers, no disasters in v1.
       Advisor: fire alerts, no-fire-dept hint, crime-wave warning. Civic
       sprites from the expansion pack.
 
-Still open: traffic density affecting desirability (the ambient cars are
-visual only), stadium/seaport/airport, scenario challenges, sound, bridges.
+- [x] **Bridges.** The road tool spans water (BRIDGE_COST premium, drag and
+      go); bridges conduct power, satisfy road access, carry ambient cars, are
+      fireproof, and bulldoze back to open water. Pack art with procedural
+      fallback.
+- [x] **Traffic congestion.** `sim/traffic.ts`: developed zones load trips onto
+      roads within TRAFFIC_RADIUS; jammed streets slow adjacent residential
+      growth and cut land value. Third overlay mode (🚗) + gridlock advisor
+      warning.
+- [x] **Sound.** `ui/sound.ts`: synthesised WebAudio blips (build, bulldoze,
+      error buzz, fire siren, milestone chime) — no assets; mute toggle (🔊/🔇)
+      persisted in localStorage; unlocks on first gesture per autoplay policy.
+
+Still open: stadium/seaport/airport (multi-tile buildings), scenario challenges.
 
 ## Deferred / notes for later
 - **Art pass mostly done early.** All building sprites in `src/assets/buildings/`

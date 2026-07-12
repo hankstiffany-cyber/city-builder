@@ -9,6 +9,7 @@ import { createToolbar } from "./ui/toolbar.ts";
 import { createMenu } from "./ui/menu.ts";
 import { Hud } from "./ui/hud.ts";
 import { Toasts } from "./ui/toasts.ts";
+import { Sound } from "./ui/sound.ts";
 import { Minimap } from "./render/minimap.ts";
 import { isSaveData } from "./core/save.ts";
 
@@ -52,6 +53,36 @@ camera.centerOn(CONFIG.MAP_WIDTH / 2, CONFIG.MAP_HEIGHT / 2);
 const input = new Input(canvas, camera, game);
 const hud = new Hud(hudEl, game);
 const toasts = new Toasts(appEl);
+const sound = new Sound();
+
+// Unlock audio on the first gesture; blip when a build gesture starts.
+canvas.addEventListener("pointerdown", () => {
+  sound.unlock();
+  if (game.tool === "bulldoze") sound.play("bulldoze");
+  else if (game.tool !== "pan") sound.play("build");
+});
+document.addEventListener("pointerdown", () => sound.unlock(), { once: true });
+
+// Mute toggle lives with the HUD controls.
+{
+  const controls = document.getElementById("hud-controls")!;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "speed-btn";
+  const label = () => {
+    btn.textContent = sound.muted ? "🔇" : "🔊";
+    btn.title = sound.muted ? "Unmute sounds" : "Mute sounds";
+    btn.setAttribute("aria-label", btn.title);
+  };
+  btn.addEventListener("click", () => {
+    sound.unlock();
+    sound.toggleMute();
+    if (!sound.muted) sound.play("click");
+    label();
+  });
+  label();
+  controls.insertBefore(btn, controls.firstChild);
+}
 const minimap = new Minimap(document.getElementById("minimap") as HTMLCanvasElement, game, camera);
 const ambient = new Ambient();
 createToolbar(toolbarEl, game);
@@ -114,7 +145,13 @@ function frame(now: number): void {
   drawAtmosphere(ctx, darkness);
   hud.update(game, camera, input.hover);
   minimap.draw();
-  while (game.messages.length > 0) toasts.push(game.messages.shift()!);
+  while (game.messages.length > 0) {
+    const msg = game.messages.shift()!;
+    toasts.push(msg);
+    if (msg.id === "fire") sound.play("fire");
+    else if (msg.id.startsWith("milestone_") || msg.id === "first_plant") sound.play("milestone");
+    else if (msg.id === "cant_afford") sound.play("error");
+  }
 
   requestAnimationFrame(frame);
 }

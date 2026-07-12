@@ -71,6 +71,13 @@ export const CONFIG = {
   TOAST_MS: 6_500, // how long a message stays on screen
   MAX_TOASTS: 3,
 
+  // --- Bridges & traffic (Phase 8) ---
+  BRIDGE_COST: 50, // road tool price per tile when crossing water
+  TRAFFIC_RADIUS: 3, // how far a zone's trips load onto nearby roads
+  TRAFFIC_SCALE: 26, // summed zone levels that saturate a road tile to 1.0
+  TRAFFIC_R_SENSITIVITY: 0.5, // residential growth penalty per unit of traffic
+  LAND_VALUE_TRAFFIC: 0.2, // subtracted per unit of adjacent road traffic
+
   // --- Services & disasters (Phase 8) ---
   STATION_COVERAGE_RADIUS: 8, // fire/police reach (Chebyshev, linear falloff)
   STATION_UPKEEP: 15, // $/month per station, deducted on tax day

@@ -10,13 +10,14 @@ import { computePollution } from "../sim/pollution.ts";
 import { computeLandValue } from "../sim/landvalue.ts";
 import { computeCoverage } from "../sim/coverage.ts";
 import { computeCrime } from "../sim/crime.ts";
+import { computeTraffic } from "../sim/traffic.ts";
 import { fireTick } from "../sim/fire.ts";
 import { advise, collectReport, type AdvisorMessage } from "../sim/advisor.ts";
 import { decodeInto, encodeSave, type SaveData } from "./save.ts";
 
 export type Speed = "paused" | "slow" | "fast";
 export type Difficulty = keyof typeof CONFIG.DIFFICULTY_MONEY;
-export type OverlayMode = "none" | "value" | "crime";
+export type OverlayMode = "none" | "value" | "crime" | "traffic";
 
 /**
  * Holds all mutable game state and is the single entry point the UI/input
@@ -47,6 +48,7 @@ export class Game {
   private fireCoverage: Float32Array;
   private policeCoverage: Float32Array;
   private crime: Float32Array;
+  private traffic: Float32Array;
   private lastMonth: number;
   private tickCount = 0;
   private shownOnce = new Set<string>();
@@ -63,6 +65,7 @@ export class Game {
     this.fireCoverage = computeCoverage(this.grid, TileType.FireStation);
     this.policeCoverage = computeCoverage(this.grid, TileType.PoliceStation);
     this.crime = computeCrime(this.grid, this.policeCoverage);
+    this.traffic = computeTraffic(this.grid);
     this.demand = computeDemand(computeStats(this.grid), this.taxRate);
     this.lastMonth = this.monthIndex();
   }
@@ -95,19 +98,21 @@ export class Game {
     this.taxRate = Math.max(0, Math.min(CONFIG.TAX_RATE_MAX, rate));
   }
 
-  /** Cycles the heat-map: off → land value → crime → off. */
+  /** Cycles the heat-map: off → land value → crime → traffic → off. */
   cycleOverlay(): void {
-    this.overlayMode =
-      this.overlayMode === "none" ? "value" : this.overlayMode === "value" ? "crime" : "none";
+    const order: OverlayMode[] = ["none", "value", "crime", "traffic"];
+    this.overlayMode = order[(order.indexOf(this.overlayMode) + 1) % order.length];
     this.refreshFields();
     this.refreshOverlay();
   }
 
   private refreshOverlay(): void {
     if (this.overlayMode === "value") {
-      this.overlayField = computeLandValue(this.grid, this.pollution, this.crime);
+      this.overlayField = computeLandValue(this.grid, this.pollution, this.crime, this.traffic);
     } else if (this.overlayMode === "crime") {
       this.overlayField = this.crime;
+    } else if (this.overlayMode === "traffic") {
+      this.overlayField = this.traffic;
     } else {
       this.overlayField = null;
     }
@@ -119,6 +124,7 @@ export class Game {
     this.fireCoverage = computeCoverage(this.grid, TileType.FireStation);
     this.policeCoverage = computeCoverage(this.grid, TileType.PoliceStation);
     this.crime = computeCrime(this.grid, this.policeCoverage);
+    this.traffic = computeTraffic(this.grid);
   }
 
   /**
@@ -174,7 +180,7 @@ export class Game {
       }
     }
 
-    growthTick(this.grid, this.demand, Math.random, this.pollution, this.crime);
+    growthTick(this.grid, this.demand, Math.random, this.pollution, this.crime, this.traffic);
     this.refreshOverlay();
 
     this.totalDays += CONFIG.DAYS_PER_TICK;
@@ -198,8 +204,10 @@ export class Game {
   private runAdvisor(): void {
     const report = collectReport(this.grid, this.pollution);
     let maxCrime = 0;
+    let maxTraffic = 0;
     for (let i = 0; i < this.crime.length; i++) {
       if (this.crime[i] > maxCrime) maxCrime = this.crime[i];
+      if (this.traffic[i] > maxTraffic) maxTraffic = this.traffic[i];
     }
     for (const msg of advise({
       report,
@@ -207,6 +215,7 @@ export class Game {
       money: this.money,
       population: this.population,
       maxCrime,
+      maxTraffic,
     })) {
       this.emit(msg);
     }

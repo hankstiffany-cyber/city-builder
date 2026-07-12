@@ -83,6 +83,9 @@ export function drawTilemap(
         case TileType.Road:
           drawRoad(ctx, grid, tx, ty, sx, sy, size, ts);
           break;
+        case TileType.Bridge:
+          drawBridge(ctx, grid, tx, ty, sx, sy, size, ts, now);
+          break;
         case TileType.PowerLine:
           drawPowerLine(ctx, grid, tx, ty, sx, sy, size, ts);
           break;
@@ -498,6 +501,53 @@ function drawRubble(
   }
 }
 
+/** Bridge deck over water; orientation follows its road connections. */
+function drawBridge(
+  ctx: CanvasRenderingContext2D,
+  grid: Grid,
+  tx: number,
+  ty: number,
+  sx: number,
+  sy: number,
+  size: number,
+  ts: number,
+  now: number
+): void {
+  const mask = neighbourMask(
+    grid,
+    tx,
+    ty,
+    (t) => t === TileType.Road || t === TileType.Bridge
+  );
+  const vertical = (mask & 5) !== 0 && (mask & 10) === 0 ? true : (mask & 10) !== 0 ? false : true;
+  const img = sprite(vertical ? "bridge_ns" : "bridge_ew");
+  if (img) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, sx, sy, size, size);
+    return;
+  }
+  // Fallback: water, then a grey deck with rails and a centre dash.
+  drawWater(ctx, grid, tx, ty, sx, sy, size, ts, now);
+  const deck = ts * 0.62;
+  const off = (size - deck) / 2;
+  ctx.fillStyle = "#565a61";
+  if (vertical) ctx.fillRect(sx + off, sy, deck, size);
+  else ctx.fillRect(sx, sy + off, size, deck);
+  ctx.fillStyle = "#7d828a"; // rails
+  const rail = Math.max(1, ts * 0.07);
+  if (vertical) {
+    ctx.fillRect(sx + off, sy, rail, size);
+    ctx.fillRect(sx + off + deck - rail, sy, rail, size);
+  } else {
+    ctx.fillRect(sx, sy + off, size, rail);
+    ctx.fillRect(sx, sy + off + deck - rail, size, rail);
+  }
+  ctx.fillStyle = "#d9d38a";
+  const t = Math.max(1, ts * 0.05);
+  if (vertical) ctx.fillRect(sx + size / 2 - t / 2, sy, t, size);
+  else ctx.fillRect(sx, sy + size / 2 - t / 2, size, t);
+}
+
 // --- Infrastructure ---
 
 /** Bitmask of orthogonal neighbours matching `match`: N=1, E=2, S=4, W=8. */
@@ -525,7 +575,12 @@ function drawRoad(
   size: number,
   ts: number
 ): void {
-  const mask = neighbourMask(grid, tx, ty, (t) => t === TileType.Road);
+  const mask = neighbourMask(
+    grid,
+    tx,
+    ty,
+    (t) => t === TileType.Road || t === TileType.Bridge
+  );
   const img = sprite(`road_${mask}`);
   if (img) {
     ctx.imageSmoothingEnabled = false;

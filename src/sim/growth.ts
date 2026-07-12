@@ -1,6 +1,7 @@
 import { CONFIG } from "../config.ts";
 import { Grid } from "./grid.ts";
 import { TileType, isZone } from "./tiles.ts";
+import { roadsideTraffic } from "./traffic.ts";
 import type { Demand } from "./demand.ts";
 
 export interface GrowthResult {
@@ -26,7 +27,8 @@ export function growthTick(
   demand: Demand,
   rand: () => number = Math.random,
   pollution?: Float32Array,
-  crime?: Float32Array
+  crime?: Float32Array,
+  traffic?: Float32Array
 ): GrowthResult {
   let grew = 0;
   let decayed = 0;
@@ -44,6 +46,10 @@ export function growthTick(
       }
       // A nearby park makes the neighbourhood fill in faster.
       if (d > 0 && hasParkNear(grid, x, y)) d *= 1 + CONFIG.PARK_GROWTH_BONUS;
+      // Nobody wants a bedroom window over a jammed street.
+      if (traffic) {
+        d *= Math.max(0, 1 - roadsideTraffic(grid, traffic, x, y) * CONFIG.TRAFFIC_R_SENSITIVITY);
+      }
     }
 
     // Shops won't move into high-crime blocks; police coverage fixes that.

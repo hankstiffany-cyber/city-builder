@@ -11,6 +11,7 @@ export enum TileType {
   Trees = "trees",
   // --- Built ---
   Road = "road",
+  Bridge = "bridge",
   PowerLine = "powerline",
   ZoneR = "zone_r",
   ZoneC = "zone_c",
@@ -64,6 +65,7 @@ export function conductsPower(type: TileType): boolean {
   return (
     type === TileType.PowerLine ||
     type === TileType.Road ||
+    type === TileType.Bridge ||
     type === TileType.PowerPlant ||
     type === TileType.FireStation ||
     type === TileType.PoliceStation ||
@@ -86,4 +88,9 @@ const FLAMMABLE = new Set<TileType>([
 /** What a fire can ignite. Grass, roads, water, and rubble are firebreaks. */
 export function isFlammable(type: TileType): boolean {
   return FLAMMABLE.has(type);
+}
+
+/** Road-like tiles: carry cars and satisfy zones' road-access requirement. */
+export function carriesTraffic(type: TileType): boolean {
+  return type === TileType.Road || type === TileType.Bridge;
 }

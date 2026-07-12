@@ -19,6 +19,7 @@ const MINI_COLOR: Record<TileType, string> = {
   [TileType.PoliceStation]: "#6a8fd8",
   [TileType.Fire]: "#ff8c1a",
   [TileType.Rubble]: "#55504a",
+  [TileType.Bridge]: "#a6acb5",
 };
 
 /**

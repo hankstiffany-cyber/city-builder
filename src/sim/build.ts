@@ -1,4 +1,4 @@
-import { TOOL_COST } from "../config.ts";
+import { CONFIG, TOOL_COST } from "../config.ts";
 import { Grid } from "./grid.ts";
 import { TileType, isBuildable, isTerrain } from "./tiles.ts";
 
@@ -71,8 +71,16 @@ export function applyTool(
     if (current === TileType.Fire) return { ok: false, reason: "nothing_to_do" };
     if (current === TileType.Grass) return { ok: false, reason: "nothing_to_do" };
     if (money < cost) return { ok: false, reason: "no_money" };
-    grid.setType(x, y, TileType.Grass);
+    // A demolished bridge leaves open water, not a floating lawn.
+    grid.setType(x, y, current === TileType.Bridge ? TileType.Water : TileType.Grass);
     return { ok: true, cost };
+  }
+
+  // The road tool spans water as a bridge, at a premium.
+  if (tool === "road" && current === TileType.Water) {
+    if (money < CONFIG.BRIDGE_COST) return { ok: false, reason: "no_money" };
+    grid.setType(x, y, TileType.Bridge);
+    return { ok: true, cost: CONFIG.BRIDGE_COST };
   }
 
   // Build tools:

@@ -28,6 +28,7 @@ const TYPE_ORDER: TileType[] = [
   TileType.PoliceStation,
   TileType.Fire,
   TileType.Rubble,
+  TileType.Bridge,
 ];
 const TYPE_INDEX = new Map<TileType, number>(TYPE_ORDER.map((t, i) => [t, i]));
 

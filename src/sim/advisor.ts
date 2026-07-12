@@ -76,6 +76,8 @@ export interface AdvisorInput {
   population: number;
   /** Worst crime cell on the map, 0..1. */
   maxCrime?: number;
+  /** Worst road-tile congestion, 0..1. */
+  maxTraffic?: number;
 }
 
 /** Stateless rules: everything that applies right now. Caller paces delivery. */
@@ -85,6 +87,7 @@ export function advise({
   money,
   population,
   maxCrime = 0,
+  maxTraffic = 0,
 }: AdvisorInput): AdvisorMessage[] {
   const out: AdvisorMessage[] = [];
 
@@ -149,6 +152,14 @@ export function advise({
       id: "crime_wave",
       kind: "warn",
       text: "🚨 Crime is taking hold — shops won't grow in rough blocks. Build Police Stations (check the 🗺 crime overlay).",
+    });
+  }
+
+  if (maxTraffic > 0.75) {
+    out.push({
+      id: "gridlock",
+      kind: "warn",
+      text: "🚗 Gridlock! Homes next to jammed streets stop growing — add parallel roads to spread the load (see the 🚗 overlay).",
     });
   }
 
